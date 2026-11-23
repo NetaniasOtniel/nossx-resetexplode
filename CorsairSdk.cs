@@ -30,12 +30,33 @@ public sealed class CorsairDevice
 
 /// <summary>
 /// Ponte com o iCUE SDK v4 da Corsair (iCUESDK.x64_2019.dll). A DLL não vem junto: é carregada em tempo de execução
-/// da pasta do programa ou de %AppData%\ResetExplode. O iCUE precisa estar aberto, com o SDK habilitado nas configurações.
+/// só de caminhos fixos em Program Files que exigem administrador para gravar, e só com assinatura Authenticode válida da
+/// Corsair (spec 001, G1). Nunca de %AppData%, da pasta atual ou do PATH. O carregamento só acontece quando o usuário clica em
+/// ATIVAR CONTROLE CORSAIR. O iCUE precisa estar aberto, com o SDK habilitado nas configurações.
 /// Nada é gravado no hardware: as cores valem enquanto o controle estiver ativo e voltam ao iCUE ao liberar.
 /// </summary>
 public sealed unsafe class CorsairSdk : IDisposable
 {
-    private const string DllFile = "iCUESDK.x64_2019.dll";
+    public const string DllFile = "iCUESDK.x64_2019.dll";
+
+    /// <summary>Campo O= do certificado de assinatura da Corsair (conferido na DLL 4.0.84 oficial: DigiCert G4, 22/11/2026).</summary>
+    public static readonly IReadOnlyCollection<string> Publishers = new[] { "Corsair Memory, Inc." };
+
+    /// <summary>Caminhos absolutos onde a DLL pode estar, em ordem. Todos em Program Files; mesmo assim cada um passa pela ACL.</summary>
+    public static IReadOnlyList<string> DllCandidates()
+    {
+        string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        var list = new List<string> { Path.Combine(pf, "ResetExplode", DllFile) };
+        string baseDir = Path.GetFullPath(AppContext.BaseDirectory);
+        if (baseDir.StartsWith(pf.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase))
+            list.Insert(0, Path.Combine(baseDir, DllFile)); // o próprio app instalado em Program Files
+        foreach (var d in new[] { @"Corsair\Corsair iCUE5 Software", @"Corsair\CORSAIR iCUE 5 Software", @"Corsair\CORSAIR iCUE 4 Software", @"Corsair\CORSAIR iCUE Software" })
+            list.Add(Path.Combine(pf, d, DllFile));
+        return list.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    /// <summary>Quantas vezes alguém pediu para carregar a DLL nesta instância (os testes usam para provar que abrir a aba não carrega).</summary>
+    public int LoadAttempts { get; private set; }
 
     // ---- assinaturas nativas (todas usam a convenção padrão do x64) ----
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int ConnectFn(IntPtr onState, IntPtr context);
@@ -79,19 +100,26 @@ public sealed unsafe class CorsairSdk : IDisposable
     };
 
     /// <summary>Procura e carrega a DLL do SDK. Devolve null se deu certo, ou a explicação.</summary>
-    public string? LoadDll()
+    public string? LoadDll() => LoadDll(DllCandidates());
+
+    /// <summary>Tenta cada caminho: só carrega se o local for só de admin e a assinatura for da Corsair.</summary>
+    public string? LoadDll(IEnumerable<string> candidates)
     {
         if (DllLoaded) return null;
-        var dirs = new List<string> { AppContext.BaseDirectory, Path.Combine(AppContext.BaseDirectory, "x64"), AppSettings.Folder };
-        var names = new[] { DllFile, "iCUESDK.dll" };
-        foreach (var d in dirs)
-            foreach (var n in names)
-            {
-                string p = Path.Combine(d, n);
-                if (File.Exists(p) && NativeLibrary.TryLoad(p, out _lib)) { LoadedFrom = p; goto loaded; }
-            }
-        if (NativeLibrary.TryLoad(DllFile, out _lib)) { LoadedFrom = DllFile; goto loaded; }
-        return $"Não encontrei o {DllFile}. Use o botão BAIXAR O SDK DA CORSAIR (ou copie a DLL para a pasta do ResetExplode.exe ou para {AppSettings.Folder}).";
+        LoadAttempts++;
+        var refused = new List<string>();
+        var looked = new List<string>();
+        foreach (var p in candidates)
+        {
+            looked.Add(p);
+            if (!File.Exists(p)) continue;
+            IntPtr h = TrustedBinary.LoadVerifiedLibrary(p, Publishers, out string? why);
+            if (h == IntPtr.Zero) { refused.Add($"{p}: {why}"); continue; }
+            _lib = h; LoadedFrom = p;
+            goto loaded;
+        }
+        if (refused.Count > 0) return "Recusei carregar a DLL da Corsair. " + string.Join(" · ", refused);
+        return $"Não encontrei o {DllFile} em nenhum local permitido ({string.Join("; ", looked)}). Use o botão BAIXAR O SDK DA CORSAIR.";
 
     loaded:
         try
