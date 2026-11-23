@@ -18,6 +18,11 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);tests\**;tools\**</DefaultItemExcludes>
   </PropertyGroup>
 
+  <!-- Só os testes enxergam as sobrecargas internal com a regra de local injetável (spec 001 §6) -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="ResetExplode.Tests" />
+  </ItemGroup>
+
   <ItemGroup>
     <Resource Include="Assets\logo.png" />
     <Resource Include="Assets\app.ico" />

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using Xunit;
 
 namespace ResetExplode.Tests;
@@ -84,21 +85,89 @@ public sealed class SegurancaTests : IDisposable
 
     // ------------------------------------------------------------------ G1-b: caminho gravável pelo usuário ignorado
 
-    [Fact(DisplayName = "G1-b · DLL assinada e válida, mas em pasta gravável pelo usuário, não é carregada")]
+    [Fact(DisplayName = "G1-b · DLL assinada e válida, mas em pasta gravável pelo usuário, é recusada pela regra de CAMINHO")]
     public void CaminhoGravavel_Ignorado()
     {
         string planted = Path.Combine(_tmp, CorsairSdk.DllFile);
         File.Copy(CoreClr, planted);
-        Assert.True(TrustedBinary.VerifySignature(planted, Microsoft).Ok); // a assinatura continua boa na cópia
+        // Dono explícito = o usuário do teste (com ou sem elevação), para a regra de caminho recusar sempre pelo mesmo motivo.
+        var acl = new FileInfo(planted).GetAccessControl();
+        acl.SetOwner(WindowsIdentity.GetCurrent().User!);
+        new FileInfo(planted).SetAccessControl(acl);
+        Assert.True(TrustedBinary.VerifySignature(planted, Microsoft).Ok); // a assinatura continua boa na cópia: só o caminho reprova
 
-        Assert.NotNull(TrustedBinary.CheckAdminOnly(planted));
+        string expected = $"o dono de {planted} não é Administradores/SYSTEM/TrustedInstaller";
+        Assert.Equal(expected, TrustedBinary.CheckAdminOnly(planted));
         Assert.Equal(IntPtr.Zero, TrustedBinary.LoadVerifiedLibrary(planted, Microsoft, out var why));
-        Assert.Matches("sem ser administrador|o dono de .* não é Administradores", why); // qualquer das duas regras de "só admin" basta
+        Assert.Equal(expected, why);
 
         using var sdk = new CorsairSdk();
-        string? msg = sdk.LoadDll(new[] { planted });
+        Assert.Equal($"Recusei carregar a DLL da Corsair. {planted}: {expected}", sdk.LoadDll(new[] { planted }));
         Assert.False(sdk.DllLoaded);
-        Assert.StartsWith("Recusei", msg);
+    }
+
+    // ------------------------------------------------------------------ G1-a isolado: regra de ASSINATURA com o caminho já aprovado
+    // Sem elevação não dá para criar pasta com dono Administradores; a regra de caminho é injetada (sobrecarga internal) e
+    // aprova só a pasta temporária do teste. O contador prova que ela rodou e aprovou, então quem recusa é o WinVerifyTrust.
+
+    private (Func<string, string?> rule, Func<int> calls) AllowOnlyTmp()
+    {
+        int n = 0;
+        string dir = Path.GetFullPath(_tmp);
+        return (p => { n++; return string.Equals(Path.GetDirectoryName(Path.GetFullPath(p)), dir, StringComparison.OrdinalIgnoreCase) ? null : "fora da pasta permitida do teste"; },
+                () => n);
+    }
+
+    [Fact(DisplayName = "G1-a isolado · DLL SEM ASSINATURA em caminho permitido é recusada pela regra de assinatura")]
+    public void CaminhoPermitido_SemAssinatura_RecusadaPelaAssinatura()
+    {
+        string dll = Path.Combine(_tmp, CorsairSdk.DllFile);
+        File.Copy(typeof(CorsairSdk).Assembly.Location, dll); // ResetExplode.dll: PE sem assinatura
+        var (rule, calls) = AllowOnlyTmp();
+
+        Assert.Equal(IntPtr.Zero, TrustedBinary.LoadVerifiedLibrary(dll, CorsairSdk.Publishers, rule, out var why));
+        Assert.Equal(1, calls());
+        Assert.Equal("sem assinatura digital", why); // mensagem do TRUST_E_NOSIGNATURE, não a de caminho
+
+        using var sdk = new CorsairSdk();
+        Assert.Equal($"Recusei carregar a DLL da Corsair. {dll}: sem assinatura digital", sdk.LoadDll(new[] { dll }, rule));
+        Assert.False(sdk.DllLoaded);
+        Assert.Equal(2, calls());
+    }
+
+    [Fact(DisplayName = "G1-a isolado · DLL assinada por OUTRO FABRICANTE (Microsoft) em caminho permitido é recusada pelo critério Corsair")]
+    public void CaminhoPermitido_OutroFabricante_RecusadaPeloAssinante()
+    {
+        string dll = Path.Combine(_tmp, CorsairSdk.DllFile);
+        File.Copy(CoreClr, dll); // coreclr.dll renomeado: assinatura Microsoft válida
+        var (rule, calls) = AllowOnlyTmp();
+        Assert.True(TrustedBinary.VerifySignature(dll, Microsoft).Ok); // a assinatura em si é válida
+
+        Assert.Equal(IntPtr.Zero, TrustedBinary.LoadVerifiedLibrary(dll, CorsairSdk.Publishers, rule, out var why));
+        Assert.Equal(1, calls());
+        Assert.Equal("assinado por outro fabricante (O=Microsoft Corporation)", why);
+
+        using var sdk = new CorsairSdk();
+        Assert.Equal($"Recusei carregar a DLL da Corsair. {dll}: assinado por outro fabricante (O=Microsoft Corporation)",
+                     sdk.LoadDll(new[] { dll }, rule));
+        Assert.False(sdk.DllLoaded);
+    }
+
+    [Fact(DisplayName = "G1-a isolado · DLL OFICIAL da Corsair em caminho permitido é aceita e carregada (requer RESETEXPLODE_CORSAIR_DLL)")]
+    public void CaminhoPermitido_DllOficialCorsair_Aceita()
+    {
+        string? real = Environment.GetEnvironmentVariable("RESETEXPLODE_CORSAIR_DLL");
+        Assert.False(string.IsNullOrEmpty(real), "defina RESETEXPLODE_CORSAIR_DLL com o iCUESDK.x64_2019.dll do iCUESDK_4.0.84.zip oficial");
+        string dll = Path.Combine(_tmp, CorsairSdk.DllFile);
+        File.Copy(real!, dll);
+        var (rule, calls) = AllowOnlyTmp();
+
+        using var sdk = new CorsairSdk();
+        Assert.Null(sdk.LoadDll(new[] { dll }, rule)); // null = carregou e achou as exportações do SDK
+        Assert.True(sdk.DllLoaded);
+        Assert.Equal(dll, sdk.LoadedFrom);
+        Assert.Equal(1, calls());
+        // A DLL fica no processo até o fim (CorsairSdk não descarrega): a pasta temporária pode sobrar em %TEMP%.
     }
 
     [Fact(DisplayName = "G1-b · %AppData%, %TEMP%, perfil e PATH estão fora da busca da DLL")]

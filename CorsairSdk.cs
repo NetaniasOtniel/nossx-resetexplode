@@ -103,7 +103,10 @@ public sealed unsafe class CorsairSdk : IDisposable
     public string? LoadDll() => LoadDll(DllCandidates());
 
     /// <summary>Tenta cada caminho: só carrega se o local for só de admin e a assinatura for da Corsair.</summary>
-    public string? LoadDll(IEnumerable<string> candidates)
+    public string? LoadDll(IEnumerable<string> candidates) => LoadDll(candidates, TrustedBinary.CheckAdminOnly);
+
+    /// <summary>Regra de local injetável só para os testes; produção passa sempre por <see cref="TrustedBinary.CheckAdminOnly"/>.</summary>
+    internal string? LoadDll(IEnumerable<string> candidates, Func<string, string?> pathRule)
     {
         if (DllLoaded) return null;
         LoadAttempts++;
@@ -113,7 +116,7 @@ public sealed unsafe class CorsairSdk : IDisposable
         {
             looked.Add(p);
             if (!File.Exists(p)) continue;
-            IntPtr h = TrustedBinary.LoadVerifiedLibrary(p, Publishers, out string? why);
+            IntPtr h = TrustedBinary.LoadVerifiedLibrary(p, Publishers, pathRule, out string? why);
             if (h == IntPtr.Zero) { refused.Add($"{p}: {why}"); continue; }
             _lib = h; LoadedFrom = p;
             goto loaded;

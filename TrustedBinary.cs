@@ -230,8 +230,15 @@ public static class TrustedBinary
     /// Dependências da DLL só são procuradas em System32.
     /// </summary>
     public static IntPtr LoadVerifiedLibrary(string path, IReadOnlyCollection<string> organizations, out string? problem)
+        => LoadVerifiedLibrary(path, organizations, CheckAdminOnly, out problem);
+
+    /// <summary>
+    /// Mesma carga com a regra de local injetável. Produção usa sempre <see cref="CheckAdminOnly"/> (sobrecarga pública acima);
+    /// os testes trocam a regra para exercitar a assinatura isolada, já que sem elevação não dá para criar pasta com dono admin.
+    /// </summary>
+    internal static IntPtr LoadVerifiedLibrary(string path, IReadOnlyCollection<string> organizations, Func<string, string?> pathRule, out string? problem)
     {
-        problem = CheckAdminOnly(path);
+        problem = pathRule(path);
         if (problem != null) return IntPtr.Zero;
         // FileShare.Read: ninguém grava, apaga ou renomeia o arquivo entre a conferência e a carga.
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
