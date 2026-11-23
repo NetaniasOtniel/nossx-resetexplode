@@ -6,7 +6,7 @@
 | Decisão do dono | opção 1: corrigir G1 e G2 antes de qualquer execução do app |
 | Branch | `fix/seguranca` |
 | Data | 22–23/11/2026 |
-| Estado | implementado e no `main` (merge `0403bf6`, 23/11/2026); aceite na §6: **14/14** com o runtime de `Program Filesdotnet` 8.0.34 e a DLL oficial da Corsair 4.0.84 |
+| Estado | implementado e no `main` (merge `0403bf6`, 23/11/2026); aceite na §6: **14/14** com o runtime de `Program Files\dotnet` 8.0.34 e a DLL oficial da Corsair 4.0.84 |
 
 ## 1. Problema
 
