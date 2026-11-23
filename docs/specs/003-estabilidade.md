@@ -5,7 +5,7 @@
 | Origem | [docs/diagnostico-pc.md](../diagnostico-pc.md) §6 (23/11/2026) |
 | Branch | `fix/estabilidade` |
 | Data | 23/11/2026 |
-| Estado | especificado; backup em [docs/estabilidade-backup.txt](../estabilidade-backup.txt); aplicação na §5, depois do merge da `fix/leituras` |
+| Estado | **aplicado em 23/11/2026 12:01** (`tools/estabilidade-aplicar.ps1`, log em [docs/estabilidade-aplicado.log](../estabilidade-aplicado.log)); conferido sem elevação contra o backup: só mudaram E5–E8 e D3–D4. O D3 vale **depois da próxima reinicialização**. Observação: 30 dias (§7) |
 | Escopo | só configuração do Windows (plano de energia e despejo de memória). Nada de BIOS, de reiniciar, de teste de RAM ou de fechar programas |
 
 ## 1. Problema
