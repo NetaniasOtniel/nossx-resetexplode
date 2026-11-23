@@ -138,3 +138,55 @@ Os três valores escalados ficam dentro da tolerância ATX (±5 %), o que confir
 | CPU | temperaturas e consumo plausíveis, ⏳ confirmação do HWiNFO; dois sensores de consumo fixos em 0 W que não existem nesta CPU (D8) |
 
 As correções estão no [spec 002](specs/002-correcoes-leitura.md).
+
+## 7. Estabilidade (spec 003, aplicado em 23/11/2026 às 12:01)
+
+Detalhes, fontes e critério de sucesso estão no [spec 003](specs/003-estabilidade.md). O estado anterior está em [estabilidade-backup.txt](estabilidade-backup.txt), e o log da aplicação em [estabilidade-aplicado.log](estabilidade-aplicado.log). A aplicação foi conferida depois, sem elevação, contra o backup: só mudou o que está abaixo.
+
+### 7.1 O que mudou
+
+Plano ativo: Equilibrado, valores na tomada (CA) e na bateria (CC).
+
+| Ajuste | Antes (CA / CC) | Depois (CA / CC) | Quando vale |
+|---|---|---|---|
+| Primary NVMe Power State Transition Latency Tolerance | 15 / 50 ms | 0 / 0 | já |
+| Secondary NVMe Power State Transition Latency Tolerance | 100 / 100 ms | 0 / 0 | já |
+| NVMe NOPPME | 1 / 0 | 0 / 0 | já |
+| Ajustes de NVMe e ASPM em Opções de energia | ocultos | visíveis | já |
+| `CrashControl\DedicatedDumpFile` | não existia | `D:\dedicateddump.sys` | **depois de reiniciar** |
+| `CrashControl\DumpFileSize` | não existia | 1024 MB | **depois de reiniciar** |
+
+Ficou igual, porque já estava como pedido:
+- ASPM: Desligado, 0/0;
+- "Desligar disco rígido após": Nunca;
+- timeouts de ociosidade do NVMe: 0/0;
+- minidump, `%SystemRoot%\Minidump`, AutoReboot e Overwrite;
+- pagefile no `C:`, gerenciado pelo sistema (29.696 MB).
+
+### 7.2 Hipótese revisada
+
+- O NVMe do `C:` usa um **Silicon Motion SM2263, sem DRAM**, que só anuncia o PS0: **não tem estado de economia próprio**. O **ASPM do Windows já estava desligado**. Então "o disco entra em economia e não volta" **não explica** as quedas. As tolerâncias em 0 afetam na prática o ADATA do `D:`, que é o destino do despejo e passa a não entrar em PS3/PS4.
+- O ganho real é o **despejo dedicado no `D:`**: interno, não é o disco do sistema, com BitLocker ligado como o `C:`. Se o caminho até o disco do `C:` cair de novo, o despejo ainda pode ser gravado. O minidump é que vai dizer a causa.
+- **Suspeitos que restam:**
+  1. encaixe ou alimentação do M.2 do `C:`;
+  2. firmware do SM2263 (genérico, sem fonte de atualização);
+  3. fonte ou energia: o NVMe registra 348 desligamentos inseguros;
+  4. RAM: sem ECC e nunca testada, com dois fabricantes misturados;
+  5. ASPM controlado pela BIOS, que não foi mexida.
+
+### 7.3 Próximos 30 dias
+
+- **Sucesso:**
+  - zero BugCheck;
+  - **ou** a próxima tela azul gera um arquivo em `C:\Windows\Minidump` sem o evento volmgr 161.
+- **Depois de reiniciar:** conferir se existe o `D:\dedicateddump.sys`, com cerca de 1 GB.
+- **Se vier um 0x7A com status `0xC000009C`/`0xC0000185`, ou volmgr 161 mesmo com o despejo dedicado:** trocar o NVMe do `C:`, em um spec próprio.
+
+### 7.4 Como reverter
+
+Os comandos completos estão no spec 003, §6, e precisam de prompt elevado. Em resumo:
+- tolerâncias de volta a 15/50 e 100/100 ms;
+- NOPPME de volta a 1/0;
+- `powercfg -attributes … +ATTRIB_HIDE` para ocultar de novo;
+- `reg delete … /v DedicatedDumpFile` e `/v DumpFileSize`;
+- depois de reiniciar, apagar o `D:\dedicateddump.sys`.

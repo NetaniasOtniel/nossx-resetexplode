@@ -1,0 +1,1794 @@
+# Backup do estado ANTES do spec 003 (estabilidade) — 23/11/2026 11:10:16
+# Só leitura: powercfg /getactivescheme e /qh, reg query, CIM. Reversão: docs/specs/003-estabilidade.md §6.
+
+## Plano de energia ativo
+GUID do Esquema de Energia: 381b4222-f694-41f0-9685-ff5bb260df2e  (Equilibrado)
+
+## Ajustes que o spec 003 muda (valores atuais, CA/CC, índice hexadecimal)
+PCI Express > Link State Power Management (ASPM) [501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5]: CA=0x00000000 CC=0x00000000
+Disco > Desligar disco rígido após (DISKIDLE, s) [0012ee47-9041-4b5d-9b77-535fba8b1442 6738e2c4-e8a5-4a42-b16a-e040e769756e]: CA=0x00000000 CC=0x00000000
+Disco > Primary NVMe Idle Timeout (ms) [0012ee47-9041-4b5d-9b77-535fba8b1442 d639518a-e56d-4345-8af2-b9f32fb26109]: CA=0x00000000 CC=0x00000000
+Disco > Secondary NVMe Idle Timeout (ms) [0012ee47-9041-4b5d-9b77-535fba8b1442 d3d55efd-c1ff-424e-9dc3-441be7833010]: CA=0x00000000 CC=0x00000000
+Disco > Primary NVMe Power State Transition Latency Tolerance (ms) [0012ee47-9041-4b5d-9b77-535fba8b1442 fc95af4d-40e7-4b6d-835a-56d131dbc80e]: CA=0x0000000f CC=0x00000032
+Disco > Secondary NVMe Power State Transition Latency Tolerance (ms) [0012ee47-9041-4b5d-9b77-535fba8b1442 dbc9e238-6de9-49e3-92cd-8c2b4946b472]: CA=0x00000064 CC=0x00000064
+Disco > NVMe NOPPME [0012ee47-9041-4b5d-9b77-535fba8b1442 fc7372b6-ab2d-43ee-8797-15e9841f2cca]: CA=0x00000001 CC=0x00000000
+
+## powercfg /qh (plano ativo completo, inclui ocultos)
+GUID do Esquema de Energia: 381b4222-f694-41f0-9685-ff5bb260df2e  (Equilibrado)
+  Alias GUID: SCHEME_BALANCED
+  GUID de Subgrupos: fea3413e-7e05-4911-9a71-700331f1c294  (Configurações que não pertencem a nenhum subgrupo)
+    Alias GUID: SUB_NONE
+    GUID de Configuração de Energia: 0e796bdb-100d-47d6-a2d5-f7d2daa51f51  (Exigir senha ao despertar)
+      Alias GUID: CONSOLELOCK
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Não
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Sim
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 245d8541-3943-4422-b025-13a784f679b7  (Tipo de plano de energia)
+      Alias GUID: PERSONALITY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Economia de energia
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Alto desempenho
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Equilibrado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000002
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000002
+
+    GUID de Configuração de Energia: 4faab71a-92e5-4726-b531-224559672d19  (Política de ociosidade dos dispositivos)
+      Alias GUID: DEVICEIDLE
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desempenho
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Economia de energia
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 68afb2d9-ee95-47a8-8f50-4115088073b1  (Modo de Espera Desconectado)
+      Alias GUID: DISCONNECTEDSTANDBYMODE
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Normal
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Agressivo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: f15576e8-98b7-4186-b944-eafa664402d9  (Conectividade de rede em Espera)
+      Alias GUID: CONNECTIVITYINSTANDBY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitar
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Habilitar
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Gerenciado pelo Windows
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000002
+
+  GUID de Subgrupos: 0012ee47-9041-4b5d-9b77-535fba8b1442  (Disco rígido)
+    Alias GUID: SUB_DISK
+    GUID de Configuração de Energia: 0b2d69d7-a2a1-449c-9680-f91c70521c60  (AHCI Link Power Management - HIPM/DIPM)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Active
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: HIPM
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: HIPM+DIPM
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: DIPM
+      Índice de Configurações Possíveis: 004
+      Nome Amigável de Configuração Possível: Lowest
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 51dea550-bb38-4bc4-991b-eacf37be5ec8  (Nível de Energia Máximo)
+      Alias GUID: DISKMAXPOWER
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: 6738e2c4-e8a5-4a42-b16a-e040e769756e  (Desligar o disco rígido após)
+      Alias GUID: DISKIDLE
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 80e3c60e-bb94-4ad8-bbe0-0d3195efc663  (Tempo para ignorar a intermitência do disco rígido)
+      Alias GUID: DISKBURSTIGNORE
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000001e
+
+    GUID de Configuração de Energia: d3d55efd-c1ff-424e-9dc3-441be7833010  (Secondary NVMe Idle Timeout)
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x0000ea60
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: milliseconds
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: d639518a-e56d-4345-8af2-b9f32fb26109  (Primary NVMe Idle Timeout)
+      Alias GUID: NVMEPRIMARYIDLETIMEOUT
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x0000ea60
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: milliseconds
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: dab60367-53fe-4fbc-825e-521d069d2456  (AHCI Link Power Management - Adaptive)
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x000493e0
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: millisecond
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: dbc9e238-6de9-49e3-92cd-8c2b4946b472  (Secondary NVMe Power State Transition Latency Tolerance)
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x0000ea60
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: milliseconds
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: fc7372b6-ab2d-43ee-8797-15e9841f2cca  (NVMe NOPPME)
+      Alias GUID: DISKNVMENOPPME
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: fc95af4d-40e7-4b6d-835a-56d131dbc80e  (Primary NVMe Power State Transition Latency Tolerance)
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x0000ea60
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: milliseconds
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000000f
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+  GUID de Subgrupos: 02f815b5-a5cf-4c84-bf20-649d1f75d3d8  (Internet Explorer)
+    GUID de Configuração de Energia: 4c793e7d-a264-42e1-87d3-7a0d2f523ccd  (Frequência do Temporizador do JavaScript)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Economia de energia máxima
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Desempenho Máximo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+  GUID de Subgrupos: 0d7dbae2-4294-402a-ba8e-26777e8488cd  (Configurações de tela de fundo da área de trabalho)
+    GUID de Configuração de Energia: 309dce9b-bef4-4119-9921-a851fb12f0f4  (Apresentação de slides)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Disponível
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Pausado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+  GUID de Subgrupos: 19cbb8fa-5279-450e-9fac-8a3d5fedd0c1  (Configurações de Adaptadores Sem Fio)
+    GUID de Configuração de Energia: 12bbebe6-58d6-4636-95bb-3217ef867c1a  (Modo de economia de energia)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desempenho Máximo
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Economia de Energia Baixa
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Economia de Energia Média
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Economia de Energia Máxima
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000002
+
+  GUID de Subgrupos: 238c9fa8-0aad-41ed-83f4-97be242c8f20  (Suspender)
+    Alias GUID: SUB_SLEEP
+    GUID de Configuração de Energia: 1a34bdc3-7e6b-442e-a9d0-64b6ef378e84  (Atenuações de RTC herdadas)
+      Alias GUID: LEGACYRTCMITIGATION
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitar
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Habilitar
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 25dfa149-5dd1-4736-b5ab-e8a37b5b8187  (Permitir Política de Modo Ausente)
+      Alias GUID: AWAYMODE
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Não
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Sim
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 29f6c1db-86da-48c5-9fdb-f2b67b1f44da  (Suspender depois de)
+      Alias GUID: STANDBYIDLE
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00001c20
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000258
+
+    GUID de Configuração de Energia: 7bc4a2f9-d8fc-4469-b07b-33eb785aaca0  (Tempo limite de suspensão autônoma do sistema)
+      Alias GUID: UNATTENDSLEEP
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000078
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000078
+
+    GUID de Configuração de Energia: 94ac6d29-73ce-41a6-809f-6363ba21b47e  (Permitir modo de suspensão híbrido)
+      Alias GUID: HYBRIDSLEEP
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 9d7815a6-7ee4-497e-8888-515a05f02364  (Hibernar após)
+      Alias GUID: HIBERNATEIDLE
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: a4b195f5-8225-47d8-8012-9d41369786e2  (Permitir a política exigida pelo sistema)
+      Alias GUID: SYSTEMREQUIRED
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Não
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Sim
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: abfc2519-3608-4c2a-94ea-171b0ed546ab  (Permitir Estados de Espera)
+      Alias GUID: ALLOWSTANDBY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d  (Permitir despertadores)
+      Alias GUID: RTCWAKE
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desativar
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativar
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Somente despertadores importantes
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: d4c1d4c8-d5cc-43d3-b83e-fc51215cb04d  (Permitir suspensão com controle remoto é aberto)
+      Alias GUID: REMOTEFILESLEEP
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+  GUID de Subgrupos: 2a737441-1930-4402-8d77-b2bebba308a3  (Configurações USB)
+    GUID de Configuração de Energia: 0853a681-27c8-4100-a2fd-82013e970683  (Hub Selective Suspend Timeout)
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x000186a0
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Millisecond
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000032
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: 48e6b7a6-50f5-4782-a5d4-53bb8f07e226  (Configuração de suspensão seletiva USB)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 498c044a-201b-4631-a522-5c744ed4e678  (Setting IOC on all TDs)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Disabled
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Enabled
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: d4e98f31-5ffe-4ce1-be31-1b38b384c009  (USB 3 Link Power Mangement)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Off
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Minimum power savings
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Moderate power savings
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Maximum power savings
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000002
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000002
+
+  GUID de Subgrupos: 2e601130-5351-4d9d-8e04-252966bad054  (Resiliência Ociosa)
+    Alias GUID: SUB_IR
+    GUID de Configuração de Energia: 3166bc41-7e98-4e03-b34e-ec0f5f2b218e  (Tempo limite de solicitação de energia de Execução Obrigatória)
+      Alias GUID: EXECTIME
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0xffffffff
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000012c
+
+    GUID de Configuração de Energia: c36f0eb4-2988-4a70-8eee-0884fc2c2433  (Tempo limite de união de E/S)
+      Alias GUID: COALTIME
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Milissegundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000ea60
+
+    GUID de Configuração de Energia: c42b79aa-aa3a-484b-a98f-2cf32aa90a28  (Resolução de Cronometro de Resiliência Ociosa do Processador)
+      Alias GUID: PROCIR
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x0000fde8
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Milissegundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: d502f7ee-1dc7-4efd-a55d-f04b6f5c0545  (Suspensão Profunda Habilitada/Desabilitada)
+      Alias GUID: DEEPSLEEP
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Suspensão Profunda Desabilitada
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Suspensão Profunda Habilitada
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+  GUID de Subgrupos: 48672f38-7a9a-4bb2-8bf8-3d85be19de4e  (Configurações de Interrupção de Direcionamento)
+    Alias GUID: SUB_INTSTEER
+    GUID de Configuração de Energia: 2bfc24f9-5ea2-4801-8213-3dbae01aa39d  (Modo de Interrupção de Direcionamento)
+      Alias GUID: MODE
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Padrão
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Qualquer processador
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Qualquer processador com estacionamento anulado em atraso
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Qualquer processador com estacionamento anulado
+      Índice de Configurações Possíveis: 004
+      Nome Amigável de Configuração Possível: Bloquear Roteamento de Interrupção
+      Índice de Configurações Possíveis: 005
+      Nome Amigável de Configuração Possível: Processador 0
+      Índice de Configurações Possíveis: 006
+      Nome Amigável de Configuração Possível: Processador 1
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 73cde64d-d720-4bb2-a860-c755afe77ef2  (Carga de Destino)
+      Alias GUID: PERPROCLOAD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00002710
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Décimos de percentual
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000032
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: d6ba4903-386f-4c2c-8adb-5c21b3328d25  (Gatilho de tempo de estacionamento anulado)
+      Alias GUID: UNPARKTIME
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x000186a0
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Milissegundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+  GUID de Subgrupos: 4f971e89-eebd-4455-a8de-9e59040e7347  (Botões de energia e tampa)
+    Alias GUID: SUB_BUTTONS
+    GUID de Configuração de Energia: 5ca83367-6e45-459f-a27b-476b1d01c936  (Ação de fechamento da tampa)
+      Alias GUID: LIDACTION
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Nada a fazer
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Suspender
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Hibernar
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Desligar
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 7648efa3-dd9c-4e3e-b566-50f929386280  (Ação do botão para desligar)
+      Alias GUID: PBUTTONACTION
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Nada a fazer
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Suspender
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Hibernar
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Desligar
+      Índice de Configurações Possíveis: 004
+      Nome Amigável de Configuração Possível: Desligar vídeo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000003
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000003
+
+    GUID de Configuração de Energia: 833a6b62-dfa4-46d1-82f8-e09e34d029d6  (Habilitar desligamento forçado por botão/tampa)
+      Alias GUID: SHUTDOWN
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 96996bc0-ad50-47ec-923b-6f41874dd9eb  (Ação do botão de suspensão)
+      Alias GUID: SBUTTONACTION
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Nada a fazer
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Suspender
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Hibernar
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Desligar
+      Índice de Configurações Possíveis: 004
+      Nome Amigável de Configuração Possível: Desligar vídeo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 99ff10e7-23b1-4c07-a9d1-5c3206d741b4  (Ação ao abrir a tampa)
+      Alias GUID: LIDOPENWAKE
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Nada a fazer
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ligar a tela
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: a7066653-8d6c-40a8-910e-a1f54b84c7e5  (Botão para desligar do menu Iniciar)
+      Alias GUID: UIBUTTON_ACTION
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Suspender
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Hibernar
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Desligar
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+  GUID de Subgrupos: 501a4d13-42af-4429-9fd1-a8218c268e20  (PCI Express)
+    Alias GUID: SUB_PCIEXPRESS
+    GUID de Configuração de Energia: ee12f906-d277-404b-b6da-e5fa1a576df5  (Gerenciamento de Energia do Estado da Conexão)
+      Alias GUID: ASPM
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Economia de energia moderada
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Economia de energia máxima
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+  GUID de Subgrupos: 54533251-82be-4824-96c1-47b60b740d00  (Gerenciamento de energia do processador)
+    Alias GUID: SUB_PROCESSOR
+    GUID de Configuração de Energia: 06cadf0e-64ed-448a-8927-ce7bf90eb35d  (Limite de aumento de desempenho do processador)
+      Alias GUID: PERFINCTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000003c
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000005a
+
+    GUID de Configuração de Energia: 06cadf0e-64ed-448a-8927-ce7bf90eb35e  (Limite de aumento de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PERFINCTHRESHOLD1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000003c
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000005a
+
+    GUID de Configuração de Energia: 0cc5b647-c1df-4637-891a-dec35c318583  (Núcleos mínimos de estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPMINCORES
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: 0cc5b647-c1df-4637-891a-dec35c318584  (Nº mín. de núcleos de estacionamento do núcleo de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: CPMINCORES1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 12a0ab44-fe28-4fa9-b3bd-4b64f44960a6  (Limite de diminuição de desempenho do processador)
+      Alias GUID: PERFDECTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000014
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000001e
+
+    GUID de Configuração de Energia: 12a0ab44-fe28-4fa9-b3bd-4b64f44960a7  (Limite de diminuição de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PERFDECTHRESHOLD1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000014
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000001e
+
+    GUID de Configuração de Energia: 12fd031f-53d2-4bf4-ac6d-c699fc9538c7  (Porcentagem de utilitários importantes da zona de contenção híbrida)
+      Alias GUID: HETEROCONTAINMENTHYBRIDIMPUTILTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 1a98ad09-af22-42ca-8e61-f0a5802c270a  (Contagem de restrições do processador)
+      Alias GUID: RESTRICTIONCOUNT
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000040
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Contagem de restrições do processador
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 1facfc65-a930-4bc5-9f38-504ec097bbc0  (Desempenho inicial de Eficiência de Consumo de Energia de Processador Classe 1 quando não estacionado)
+      Alias GUID: HETEROCLASS1INITIALPERF
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000032
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: 2430ab6f-a520-44a2-9601-f7f23b5134b1  (Limite de simultaneidade do estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPCONCURRENCY
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000061
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000061
+
+    GUID de Configuração de Energia: 2ddd5a84-5a71-437e-912a-db0b8c788732  (Tempo de aumento de estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPINCREASETIME
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000003
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000003
+
+    GUID de Configuração de Energia: 36687f9e-e3a5-4dbf-b1dc-15eb381c6863  (Política de preferência de desempenho de energia do processador)
+      Alias GUID: PERFEPP
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000021
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: 36687f9e-e3a5-4dbf-b1dc-15eb381c6864  (Política de preferências de desempenho de energia do processador para o Processador de Eficiência Classe 1)
+      Alias GUID: PERFEPP1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000021
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: 36687f9e-e3a5-4dbf-b1dc-15eb381c6865  (Política de preferências de desempenho de energia do processador para o Processador de Eficiência Classe 2)
+      Alias GUID: PERFEPP2
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000021
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: 3b04d4fd-1cc7-4f23-ab1c-d1337819c4bb  (Permitir Estados de Aceleração)
+      Alias GUID: THROTTLING
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Automático
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000002
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000002
+
+    GUID de Configuração de Energia: 4009efa7-e72d-4cba-9edf-91084ea8cbc3  (Tempo de aumento de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: HETEROINCREASETIME
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 40fbefc7-2e9d-4d25-a185-0cfd8574bac6  (Política de diminuição de desempenho do processador)
+      Alias GUID: PERFDECPOL
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Ideal
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Único
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Foguete
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 40fbefc7-2e9d-4d25-a185-0cfd8574bac7  (Política de diminuição de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PERFDECPOL1
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Ideal
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Único
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Foguete
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 43f278bc-0f8a-46d0-8b31-9a23e615d713  (Limite inferior da arquitetura do processador de threads de execução curta)
+      Alias GUID: LONGTHREADARCHCLASSLOWERTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x000000ff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Classe de arquitetura do processador
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 447235c7-6a8d-4cc0-8e24-9eaf70b96e2b  (Estado de desempenho estacionado do estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPPERF
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Sem Preferência
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Estado de Desempenho mais Profundo
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Estado de Desempenho mais Superficial
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 447235c7-6a8d-4cc0-8e24-9eaf70b96e2c  (Estado de desempenho de estacionado do estacionamento do núcleo de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: CPPERF1
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Sem Preferência
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Estado de Desempenho mais Profundo
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Estado de Desempenho mais Superficial
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 45bcc044-d885-43e2-8605-ee0ec6e96b59  (Política de aumento de desempenho do processador)
+      Alias GUID: PERFBOOSTPOL
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000003c
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000028
+
+    GUID de Configuração de Energia: 465e1f50-b610-473a-ab58-00d1077dc418  (Política de aumento de desempenho do processador)
+      Alias GUID: PERFINCPOL
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Ideal
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Único
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Foguete
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: IdealAggressive
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 465e1f50-b610-473a-ab58-00d1077dc419  (Política de aumento de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PERFINCPOL1
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Ideal
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Único
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Foguete
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: IdealAggressive
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000003
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000003
+
+    GUID de Configuração de Energia: 4b70f900-cdd9-4e66-aa26-ae8417f98173  (Preferência de desempenho de energia do processador de dica de sensibilidade de latência)
+      Alias GUID: LATENCYHINTEPP
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: 4b70f900-cdd9-4e66-aa26-ae8417f98174  (Preferência de desempenho de energia do processador da dica de sensibilidade de latência para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: LATENCYHINTEPP1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: 4b70f900-cdd9-4e66-aa26-ae8417f98175  (Preferência de desempenho de energia do processador em resposta a dicas de sensibilidade à latência para Eficiência de Consumo de Energia de Processador Classe 2)
+      Alias GUID: LATENCYHINTEPP2
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: 4b92d758-5a24-4851-a470-815d78aee119  (Limite de rebaixamento por ociosidade do processador)
+      Alias GUID: IDLEDEMOTE
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000028
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000014
+
+    GUID de Configuração de Energia: 4bdaf4e9-d103-46d7-a5f0-6280121616ef  (Limite de distribuição de estacionamento de núcleo de desempenho de processador)
+      Alias GUID: CPDISTRIBUTION
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000005a
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000005a
+
+    GUID de Configuração de Energia: 4d2b0152-7d5c-498b-88e2-34345392a2c5  (Intervalo de verificação de tempo de desempenho do processador)
+      Alias GUID: PERFCHECK
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00001388
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Milissegundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000001e
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000001e
+
+    GUID de Configuração de Energia: 4e4450b3-6179-4e91-b8f1-5bb9938f81a1  (Ciclo de serviço do processador)
+      Alias GUID: PERFDUTYCYCLING
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Habilitado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 53824d46-87bd-4739-aa1b-aa793fac36d6  (Limite inferior da arquitetura do processador de threads de execução curta)
+      Alias GUID: SHORTTHREADARCHCLASSLOWERTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x000000ff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Classe de arquitetura do processador
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 5ba7419a-295c-4b02-841b-66799388d6da  (Pontuação de eficiência mínima do WPS para núcleos pequenos)
+      Alias GUID: WPSMINEFFICIENCYTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x000000ff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Pontuação do WPS
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 5d76a2ca-e8c0-402f-a133-2158492d58ad  (Desativação da ociosidade do processador)
+      Alias GUID: IDLEDISABLE
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Habilitar ociosos
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Desabilitar ociosos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 603fe9ce-8d01-4b48-a968-1d706c28fd5c  (Prioridade de recursos do processador)
+      Alias GUID: RESOURCEPRIORITY
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: 603fe9ce-8d01-4b48-a968-1d706c28fd5d  (Prioridade do recurso de processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: RESOURCEPRIORITY1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: 603fe9ce-8d01-4b48-a968-1d706c28fd5e  (Prioridade do recurso de processador para Eficiência de Consumo de Energia de Processador Classe 2)
+      Alias GUID: RESOURCEPRIORITY2
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: 60fbe21b-efd9-49f2-b066-8674d8e9f423  (Política de contenção hetero.)
+      Alias GUID: HETEROCONTAINMENTPOLICY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Habilitado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 616cdaa5-695e-4545-97ad-97dc2d1bdd88  (Nº mín. de núcleos/pacotes com estacionamento anulado em resposta a dicas de sensibilidade à latência)
+      Alias GUID: LATENCYHINTUNPARK
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000032
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: 616cdaa5-695e-4545-97ad-97dc2d1bdd89  (Nº mín. de núcleos/pacotes com estacionamento anulado em resposta a dicas de sensibilidade à latência para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: LATENCYHINTUNPARK1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 619b7505-003b-4e82-b7a6-4dd29c300971  (Desempenho do processador em relação às dicas de sensibilidade de latência)
+      Alias GUID: LATENCYHINTPERF
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000063
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000063
+
+    GUID de Configuração de Energia: 619b7505-003b-4e82-b7a6-4dd29c300972  (Desempenho do processador em resposta a dicas de sensibilidade à latência para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: LATENCYHINTPERF1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000032
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: 619b7505-003b-4e82-b7a6-4dd29c300973  (Desempenho do processador em resposta a dicas de sensibilidade à latência para Eficiência de Consumo de Energia de Processador Classe 2)
+      Alias GUID: LATENCYHINTPERF2
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000032
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: 64fcee6b-5b1f-45a4-a76a-19b2c36ee290  (Tempo de aumento de desempenho do processador para uma zona de contenção)
+      Alias GUID: HETEROCONTAINMENTINCREASETIME
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 6788488b-1b90-4d11-8fa7-973e470dff47  (Limite de simultaneidade de contenção híbrida do processador)
+      Alias GUID: HETEROHYBRIDCONTAINMENTTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 69439b22-221b-4830-bd34-f7bcece24583  (Limite de simultaneidade de contenção de eficiência do processador)
+      Alias GUID: HETEROEFFICIENCYCONTAINMENTTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 6c2993b0-8f48-481f-bcc6-00dd2742aa06  (Dimensionamento do limite de ociosidade do processador)
+      Alias GUID: IDLESCALING
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitar escala
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Habilitar dimensionamento
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 6ece9e1f-b6dd-42bf-b1b7-5a512b10c092  (Porcentagem de utilitários importantes da zona de contenção de eficiência)
+      Alias GUID: HETEROCONTAINMENTEFFICIENCYIMPUTILTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 6ff13aeb-7897-4356-9999-dd9930af065f  (Tempo de diminuição do desempenho do processador para uma zona de contenção.)
+      Alias GUID: HETEROCONTAINMENTDECREASETIME
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 71021b41-c749-4d21-be74-a00f335d582b  (Política de diminuição de estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPDECREASEPOL
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Número ideal de núcleos
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Núcleo único
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Todos os núcleos possíveis
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Um oitavo dos núcleos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 75b0ae3f-bce0-45a7-8c89-c9611c25e100  (Frequência máxima do processador)
+      Alias GUID: PROCFREQMAX
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: MHz
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 75b0ae3f-bce0-45a7-8c89-c9611c25e101  (Frequência máxima do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PROCFREQMAX1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: MHz
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 75b0ae3f-bce0-45a7-8c89-c9611c25e102  (Frequência máxima do processador para Eficiência de Consumo de Energia de Processador Classe 2)
+      Alias GUID: PROCFREQMAX2
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: MHz
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 7b224883-b3cc-4d79-819f-8374152cbe7c  (Limite de promoção por ociosidade do processador)
+      Alias GUID: IDLEPROMOTE
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000003c
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000028
+
+    GUID de Configuração de Energia: 7d24baa7-0b84-480f-840c-1b0743c00f5f  (Contagem de histórico do desempenho do processador)
+      Alias GUID: PERFHISTORY
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000080
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 7d24baa7-0b84-480f-840c-1b0743c00f60  (Contagem do histórico de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PERFHISTORY1
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000080
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 7f2492b6-60b1-45e5-ae55-773f8cd5caec  (Tempo de diminuição de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: HETERODECREASETIME
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000003
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000003
+
+    GUID de Configuração de Energia: 7f2f5cfa-f10c-4823-b5e1-e93ae85f46b5  (Política heterogênea política em vigor)
+      Alias GUID: HETEROPOLICY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Usar política heterogênea 0
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Usar política heterogênea 1
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Usar política heterogênea 2
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Usar política heterogênea 3
+      Índice de Configurações Possíveis: 004
+      Nome Amigável de Configuração Possível: Usar política heterogênea 4
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000004
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000004
+
+    GUID de Configuração de Energia: 828423eb-8662-4344-90f7-52bf15870f5a  (Limite superior da arquitetura do processador de threads de execução superior)
+      Alias GUID: SHORTTHREADARCHCLASSUPPERTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x000000ff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Classe de arquitetura do processador
+    Índice de Configurações de Correntes Alternadas Atuais: 0x000000ff
+    Índice de Configurações de Correntes Contínuas Atuais: 0x000000ff
+
+    GUID de Configuração de Energia: 893dee8e-2bef-41e0-89c6-b55d0929964c  (Estado de desempenho mínimo)
+      Alias GUID: PROCTHROTTLEMIN
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000005
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000005
+
+    GUID de Configuração de Energia: 893dee8e-2bef-41e0-89c6-b55d0929964d  (Estado mínimo do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PROCTHROTTLEMIN1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000005
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000005
+
+    GUID de Configuração de Energia: 893dee8e-2bef-41e0-89c6-b55d0929964e  (Estado mínimo do processador para Eficiência de Consumo de Energia de Processador Classe 2)
+      Alias GUID: PROCTHROTTLEMIN2
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000005
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000005
+
+    GUID de Configuração de Energia: 8baa4a8a-14c6-4451-8e8b-14bdbd197537  (Modo autônomo de desempenho do processador)
+      Alias GUID: PERFAUTONOMOUS
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Habilitado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 93b8b6dc-0698-4d1c-9ee4-0644e900c85d  (Política de agendamento do thread heterogênea)
+      Alias GUID: SCHEDPOLICY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Todos os processadores
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Processadores com desempenho
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Preferir processadores com desempenho
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Processadores eficientes
+      Índice de Configurações Possíveis: 004
+      Nome Amigável de Configuração Possível: Preferir processadores eficientes
+      Índice de Configurações Possíveis: 005
+      Nome Amigável de Configuração Possível: Automático
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000005
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000005
+
+    GUID de Configuração de Energia: 943c8cb6-6f93-4227-ad87-e9a3feec08d1  (Limite de super-utilização de estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPOVERUTIL
+      Configuração Mínima Possível: 0x00000005
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000055
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000055
+
+    GUID de Configuração de Energia: 94d3a615-a899-4ac5-ae2b-e4d8f634367f  (Política de resfriamento do sistema)
+      Alias GUID: SYSCOOLPOL
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Passivo
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 97cfac41-2217-47eb-992d-618b1977c907  (Latência de estacionamento do núcleo de desempenho do processador)
+      Alias GUID: SOFTPARKLATENCY
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Microssegundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 984cf492-3bed-4488-a8f9-4286c97bf5aa  (Tempo de aumento de desempenho do processador)
+      Alias GUID: PERFINCTIME
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 984cf492-3bed-4488-a8f9-4286c97bf5ab  (Tempo de aumento de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PERFINCTIME1
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 9943e905-9a30-4ec1-9b99-44dd3b76f7a2  (Estado máximo de ociosidade do processador)
+      Alias GUID: IDLESTATEMAX
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000014
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Tipo de Estado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: b000397d-9b0b-483d-98c9-692a6060cfbf  (Limite de aumento do nível de desempenho do processador para aumento de contagem de processador de Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: HETEROINCREASETHRESHOLD
+    Índice de Configurações de Correntes Alternadas Atuais: 0x000000ff
+    Índice de Configurações de Correntes Contínuas Atuais: 0x000000ff
+
+    GUID de Configuração de Energia: b000397d-9b0b-483d-98c9-692a6060cfc0  (Limite de aumento do nível de desempenho do processador para aumento da contagem de processadores de Eficiência de Consumo de Energia de Processador Classe 2)
+      Alias GUID: HETEROINCREASETHRESHOLD1
+    Índice de Configurações de Correntes Alternadas Atuais: 0x000000ff
+    Índice de Configurações de Correntes Contínuas Atuais: 0x000000ff
+
+    GUID de Configuração de Energia: b0deaf6b-59c0-4523-8a45-ca7f40244114  (Política de desestacionar o módulo)
+      Alias GUID: MODULEUNPARKPOLICY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Rodízio
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Sequenciais
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: b28a6829-c5f7-444e-8f61-10e24e85c532  (Política de desmarcação de threads Smt)
+      Alias GUID: SMTUNPARKPOLICY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Principal
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Núcleo por Thread
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Rodízio
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Sequenciais
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: b669a5e9-7b1d-4132-baaa-49190abcfeb6  (Política complexa de desestacionar)
+      Alias GUID: COMPLEXUNPARKPOLICY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Rodízio
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Sequenciais
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: bae08b81-2d5e-4688-ad6a-13243356654b  (Política de agendamento do thread de curta execução heterogênea)
+      Alias GUID: SHORTSCHEDPOLICY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Todos os processadores
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Processadores com desempenho
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Preferir processadores com desempenho
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Processadores eficientes
+      Índice de Configurações Possíveis: 004
+      Nome Amigável de Configuração Possível: Preferir processadores eficientes
+      Índice de Configurações Possíveis: 005
+      Nome Amigável de Configuração Possível: Automático
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000005
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000005
+
+    GUID de Configuração de Energia: bc5038f7-23e0-4960-96da-33abaf5935ec  (Estado de desempenho máximo)
+      Alias GUID: PROCTHROTTLEMAX
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: bc5038f7-23e0-4960-96da-33abaf5935ed  (Estado máximo do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PROCTHROTTLEMAX1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: bc5038f7-23e0-4960-96da-33abaf5935ee  (Estado máximo do processador para Eficiência de Consumo de Energia de Processador Classe 2)
+      Alias GUID: PROCTHROTTLEMAX2
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: be337238-0d82-4146-a960-4f3749d470c7  (Modo de aumento de desempenho de processador)
+      Alias GUID: PERFBOOSTMODE
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Habilitado
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Agressivo
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Habilitado para Eficiência
+      Índice de Configurações Possíveis: 004
+      Nome Amigável de Configuração Possível: Eficiência Agressiva
+      Índice de Configurações Possíveis: 005
+      Nome Amigável de Configuração Possível: Agressivo em Garantida
+      Índice de Configurações Possíveis: 006
+      Nome Amigável de Configuração Possível: Agressivo e Eficiente em Garantida
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000002
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000002
+
+    GUID de Configuração de Energia: bf903d33-9d24-49d3-a468-e65e0325046a  (Limite superior da arquitetura do processador de threads de execução longa)
+      Alias GUID: LONGTHREADARCHCLASSUPPERTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x000000ff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Classe de arquitetura do processador
+    Índice de Configurações de Correntes Alternadas Atuais: 0x000000ff
+    Índice de Configurações de Correntes Contínuas Atuais: 0x000000ff
+
+    GUID de Configuração de Energia: c4581c31-89ab-4597-8e2b-9c9cab440e6b  (Verificação de tempo ocioso do processador)
+      Alias GUID: IDLECHECK
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00030d40
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Microssegundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000c350
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000c350
+
+    GUID de Configuração de Energia: c7be0679-2817-4d69-9d02-519a537ed0c6  (Política de aumento de estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPINCREASEPOL
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Número ideal de núcleos
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Núcleo único
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Todos os núcleos possíveis
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Um oitavo dos núcleos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: cfeda3d0-7697-4566-a922-a9086cd49dfa  (Janela de atividade autônoma do processador)
+      Alias GUID: PERFAUTONOMOUSWINDOW
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x4bb2a980
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Microssegundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00007530
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00007530
+
+    GUID de Configuração de Energia: d8edeb9b-95cf-4f95-a73c-b061973693c8  (Tempo de diminuição de desempenho do processador)
+      Alias GUID: PERFDECTIME
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: d8edeb9b-95cf-4f95-a73c-b061973693c9  (Tempo de diminuição de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: PERFDECTIME1
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000002
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000002
+
+    GUID de Configuração de Energia: d92998c2-6a48-49ca-85d4-8cceec294570  (Limite de thread em execução curto versus longo)
+      Alias GUID: SHORTTHREADRUNTIMETHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x000186a0
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Microssegundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: dfd10d17-d5eb-45dd-877a-9a34ddd15c82  (Tempo de diminuição de estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPDECREASETIME
+      Configuração Mínima Possível: 0x00000001
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Intervalos de verificação de tempo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000000a
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000000a
+
+    GUID de Configuração de Energia: e0007330-f589-42ed-a401-5ddb10e785d3  (Distribuição de utilitários para o estacionamento do núcleo de desempenho do processador)
+      Alias GUID: DISTRIBUTEUTIL
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Habilitado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: ea062031-0e34-4ff1-9b6d-eb1059334028  (Núcleos máximos de estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPMAXCORES
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: ea062031-0e34-4ff1-9b6d-eb1059334029  (Nº máx. de núcleos de estacionamento do núcleo de desempenho do processador para Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: CPMAXCORES1
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+    GUID de Configuração de Energia: f735a673-2066-4f80-a0c5-ddee0cf1bf5d  (Limite de espaço de simultaneidade do estacionamento do núcleo de desempenho do processador)
+      Alias GUID: CPHEADROOM
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000014
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000014
+
+    GUID de Configuração de Energia: f8861c27-95e7-475c-865b-13c0cb3f9d6b  (Limite de diminuição do nível de desempenho do processador para diminuição de contagem de processador de Eficiência de Consumo de Energia de Processador Classe 1)
+      Alias GUID: HETERODECREASETHRESHOLD
+    Índice de Configurações de Correntes Alternadas Atuais: 0x000000ff
+    Índice de Configurações de Correntes Contínuas Atuais: 0x000000ff
+
+    GUID de Configuração de Energia: f8861c27-95e7-475c-865b-13c0cb3f9d6c  (Limite de diminuição do nível de desempenho do processador para diminuição da contagem de processadores de Eficiência de Consumo de Energia de Processador Classe 2)
+      Alias GUID: HETERODECREASETHRESHOLD1
+    Índice de Configurações de Correntes Alternadas Atuais: 0x000000ff
+    Índice de Configurações de Correntes Contínuas Atuais: 0x000000ff
+
+    GUID de Configuração de Energia: fddc842b-8364-4edc-94cf-c17f60de1c80  (Desempenho base para Eficiência de Consumo de Energia de Processador Classe 0 quando há processadores de Eficiência de Consumo de Energia de Processador Classe 1 não estacionados)
+      Alias GUID: HETEROCLASS0FLOORPERF
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000064
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000064
+
+  GUID de Subgrupos: 5fb4938d-1ee8-4b0f-9a3c-5036b0ab995c  (Configurações de elementos gráficos)
+    Alias GUID: SUB_GRAPHICS
+    GUID de Configuração de Energia: dd848b2a-8a5d-4451-9ae2-39cd41658f6c  (Política de preferência da GPU)
+      Alias GUID: GPUPREFERENCEPOLICY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Nenhum
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Baixo consumo de energia
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+  GUID de Subgrupos: 7516b95f-f776-4464-8c53-06167f40cc99  (Vídeo)
+    Alias GUID: SUB_VIDEO
+    GUID de Configuração de Energia: 17aaa29b-8b43-4b94-aafe-35f64daaf1ee  (Esmaecer vídeo após)
+      Alias GUID: VIDEODIM
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000249
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000011d
+
+    GUID de Configuração de Energia: 3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e  (Desligar o monitor após)
+      Alias GUID: VIDEOIDLE
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000012c
+    Índice de Configurações de Correntes Contínuas Atuais: 0x000000b4
+
+    GUID de Configuração de Energia: 684c3e69-a4f7-4014-8754-d45179a56167  (Tendência de qualidade da Cor Avançada)
+      Alias GUID: ADVANCEDCOLORQUALITYBIAS
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Tendência de economia de energia da Cor Avançada
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Tendência de qualidade visual da Cor Avançada
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 8ec4b3a5-6868-48c2-be75-4f3044be88a7  (Tempo limite do visor do console de bloqueio)
+      Alias GUID: VIDEOCONLOCK
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000003c
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000003c
+
+    GUID de Configuração de Energia: 90959d22-d6a1-49b9-af93-bce885ad335b  (Exibição adaptável)
+      Alias GUID: VIDEOADAPT
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: a9ceb8da-cd46-44fb-a98b-02af69de4623  (Permitir a política exigida pelo monitor)
+      Alias GUID: ALLOWDISPLAY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Não
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Sim
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: aded5e82-b909-4619-9949-f5d71dac0bcb  (Brilho do vídeo)
+      Alias GUID: VIDEONORMALLEVEL
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000004b
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000004b
+
+    GUID de Configuração de Energia: f1fbfde2-a960-4165-9f88-50667911ce96  (Brilho para tela esmaecida)
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000032
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000032
+
+    GUID de Configuração de Energia: fbd9aa66-9553-4097-ba44-ed6e9d65eab8  (Habilitar brilho adaptável)
+      Alias GUID: ADAPTBRIGHT
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+  GUID de Subgrupos: 8619b916-e004-4dd8-9b66-dae86f806698  (Comportamento de Energia de Reconhecimento de Presença)
+    Alias GUID: SUB_PRESENCE
+    GUID de Configuração de Energia: 0a7d6ab6-ac83-4ad1-8282-eca5b58308f3  (Sensor de Presença Humana Tempo Limite de Exibição Afastável Adaptável)
+      Alias GUID: HUPRVIDEOIDLE
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000001e
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000001e
+
+    GUID de Configuração de Energia: 468fe7e5-1158-46ec-88bc-5b96c9e44fd0  (Tempo de Reserva em Espera)
+      Alias GUID: STANDBYRESERVETIME
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x000004b0
+
+    GUID de Configuração de Energia: 49cb11a5-56e2-4afb-9d38-3df47872e21b  (Porcentagem de Redefinição da Espera)
+      Alias GUID: STANDBYRESETPERCENT
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000004b
+
+    GUID de Configuração de Energia: 5adbbfbc-074e-4da1-ba38-db8b36b2c8f3  (Tempo Limite de Presença de Entrada do Não Sensor)
+      Alias GUID: NSENINPUTPRETIME
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x000000f0
+    Índice de Configurações de Correntes Contínuas Atuais: 0x000000f0
+
+    GUID de Configuração de Energia: 60c07fe1-0556-45cf-9903-d56e32210242  (Período de Cortesia de Reserva em Espera)
+      Alias GUID: STANDBYBUDGETGRACEPERIOD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000384
+
+    GUID de Configuração de Energia: 61f45dfe-1919-4180-bb46-8cc70e0b38f1  (Intervalo de atualizações do orçamento em espera)
+      Alias GUID: STANDBYBUDGETREFRESHINTERVAL
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000a8c0
+
+    GUID de Configuração de Energia: 82011705-fb95-4d46-8d35-4042b1d20def  (Modo de Previsão de Presença de Usuário)
+      Alias GUID: USERPRESENCEPREDICTION
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desabilitado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Habilitado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 9fe527be-1b70-48da-930d-7bcf17b44990  (Percentual de Reserva em Espera)
+      Alias GUID: STANDBYBUDGETPERCENT
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000005
+
+    GUID de Configuração de Energia: a79c8e0e-f271-482d-8f8a-5db9a18312de  (Tempo Limite de Esmaecimento Adaptável do Sensor de Presença Humana)
+      Alias GUID: HUPRVIDEODIMAWAY
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: aca8648e-c4b1-4baa-8cce-9390ad647f8c  (Contagem de atualizações do orçamento em espera)
+      Alias GUID: STANDBYBUDGETREFRESHCOUNT
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Número de intervalos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000004
+
+    GUID de Configuração de Energia: c763ee92-71e8-4127-84eb-f6ed043a3e3d  (Período de Cortesia de Reserva em Espera)
+      Alias GUID: STANDBYRESERVEGRACEPERIOD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000012c
+
+    GUID de Configuração de Energia: cf8c6097-12b8-4279-bbdd-44601ee5209d  (Tempo Limite de Esmaecimento Desatento Adaptável do Sensor de Presença Humana)
+      Alias GUID: HUPRVIDEODIM
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000005
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000005
+
+    GUID de Configuração de Energia: ee16691e-6ab3-4619-bb48-1c77c9357e5a  (Tempo Limite de Exibição Desatento Adaptável do Sensor de Presença Humana)
+      Alias GUID: HUPRVIDEOIDLEINATTENTIVE
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0xffffffff
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: segundos
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+  GUID de Subgrupos: 9596fb26-9850-41fd-ac3e-f7c3c00afd4b  (Configurações de multimídia)
+    GUID de Configuração de Energia: 03680956-93bc-4294-bba6-4e0f09bb717f  (Ao compartilhar mídia)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Permitir que o computador entre em suspensão
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Impedir suspensão quando ocioso
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Permitir que o computador entre em Modo Ausente
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 10778347-1370-4ee0-8bbd-33bdacaade49  (Tendência de qualidade da reprodução de vídeo)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Tendência de economia de energia na reprodução de vídeo
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Tendência de desempenho da reprodução de vídeo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: 34c7b99f-9a6d-4b3c-8dc7-b6693b78cef4  (Ao reproduzir vídeo)
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Otimizar qualidade de vídeo
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Equilibrado
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Otimizar economia de energia
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+  GUID de Subgrupos: de830923-a562-41af-a086-e3a2c6bad2da  (Configurações de Economia de Energia)
+    Alias GUID: SUB_ENERGYSAVER
+    GUID de Configuração de Energia: 13d09884-f74e-474a-a852-b6bde8ad03a8  (Peso de brilho do vídeo)
+      Alias GUID: ESBRIGHTNESS
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000046
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000046
+
+    GUID de Configuração de Energia: 5c5bb349-ad29-4ee2-9d0b-2b25270f7a81  (Política de Economia de Energia)
+      Alias GUID: ESPOLICY
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Usuário
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Agressivo
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: e69653ca-cf7f-4f05-aa73-cb833fa90ad4  (Nível de carga)
+      Alias GUID: ESBATTTHRESHOLD
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: Porcentagem de carga da bateria
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000001e
+
+  GUID de Subgrupos: e73a048d-bf27-4f12-9731-8b2076e8891f  (Bateria)
+    Alias GUID: SUB_BATTERY
+    GUID de Configuração de Energia: 5dbb7c9f-38e9-40d2-9749-4f8a0e9f640f  (Notificação de bateria crítica)
+      Alias GUID: BATFLAGSCRIT
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: 637ea02f-bbcb-4015-8e2c-a1c7b9c0b546  (Ação de bateria crítica)
+      Alias GUID: BATACTIONCRIT
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Nada a fazer
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Suspender
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Hibernar
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Desligar
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000002
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000002
+
+    GUID de Configuração de Energia: 8183ba9a-e910-48da-8769-14ae6dc1170a  (Nível de bateria fraca)
+      Alias GUID: BATLEVELLOW
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x0000000a
+    Índice de Configurações de Correntes Contínuas Atuais: 0x0000000a
+
+    GUID de Configuração de Energia: 9a66d8d7-4ff7-4ef9-b5a2-5a326ca2a469  (Nível de bateria crítica)
+      Alias GUID: BATLEVELCRIT
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000005
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000005
+
+    GUID de Configuração de Energia: bcded951-187b-4d05-bccc-f7e51960c258  (Notificação de bateria fraca)
+      Alias GUID: BATFLAGSLOW
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Desligado
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Ativado
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000001
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000001
+
+    GUID de Configuração de Energia: d8742dcb-3e6a-4b3c-b3fe-374623cdcf06  (Ação de bateria fraca)
+      Alias GUID: BATACTIONLOW
+      Índice de Configurações Possíveis: 000
+      Nome Amigável de Configuração Possível: Nada a fazer
+      Índice de Configurações Possíveis: 001
+      Nome Amigável de Configuração Possível: Suspender
+      Índice de Configurações Possíveis: 002
+      Nome Amigável de Configuração Possível: Hibernar
+      Índice de Configurações Possíveis: 003
+      Nome Amigável de Configuração Possível: Desligar
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000000
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000000
+
+    GUID de Configuração de Energia: f3c5027d-cd16-4930-aa6b-90db844a8f00  (Nível da bateria de reserva)
+      Configuração Mínima Possível: 0x00000000
+      Configuração Máxima Possível: 0x00000064
+      Incremento de Configurações Possíveis: 0x00000001
+      Unidades de Configurações Possíveis: %
+    Índice de Configurações de Correntes Alternadas Atuais: 0x00000007
+    Índice de Configurações de Correntes Contínuas Atuais: 0x00000007
+
+
+## CrashControl (reg query /s)
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl
+    AutoReboot    REG_DWORD    0x1
+    CrashDumpEnabled    REG_DWORD    0x3
+    DumpFile    REG_EXPAND_SZ    %SystemRoot%\MEMORY.DMP
+    DumpLogLevel    REG_DWORD    0x0
+    EnableLogFile    REG_DWORD    0x1
+    LogEvent    REG_DWORD    0x1
+    MinidumpDir    REG_EXPAND_SZ    %SystemRoot%\Minidump
+    MinidumpsCount    REG_DWORD    0x5
+    Overwrite    REG_DWORD    0x1
+    DumpFilters    REG_MULTI_SZ    dumpfve.sys
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl\FullLiveKernelReports
+    LastFullLiveReport    REG_QWORD    0x1dd359a2967946a
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl\FullLiveKernelReports\WATCHDOG
+    LastFullLiveReport    REG_QWORD    0x1dd359a2967946a
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl\LiveKernelReports
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl\LiveKernelReports\WATCHDOG
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CrashControl\StorageTelemetry
+    DeviceDumpEnabled    REG_DWORD    0x1
+    StorageTCCode_0    REG_DWORD    0x77
+    StorageTCCode_1    REG_DWORD    0x7a
+    StorageTCCode_2    REG_DWORD    0x7b
+    StorageTCCode_3    REG_DWORD    0x69696969
+    StorageTCCode_4    REG_DWORD    0x1c8
+
+
+## Pagefile
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management
+    PagingFiles    REG_SZ    ?:\pagefile.sys
+
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management
+    ExistingPageFiles    REG_MULTI_SZ    \??\C:\pagefile.sys
+
+AutomaticManagedPagefile=True
+PageFileUsage: C:\pagefile.sys alocado=29696 MB uso=9291 MB pico=22594 MB
+PageFileSetting: (nenhum — gerenciado pelo sistema)
+
+## Driver dos controladores NVMe
+Standard NVM Express Controller | Microsoft 10.0.26100.10068 | inf=stornvme.inf | PCI\VEN_1CC1&DEV_33F3&SUBSYS_33F31CC1&REV_03
+Standard NVM Express Controller | Microsoft 10.0.26100.10068 | inf=stornvme.inf | PCI\VEN_126F&DEV_2263&SUBSYS_2263126F&REV_03
+stornvme.sys: 10.0.26100.10068
+
+## Discos e volumes
+volume D: disco 1
+volume C: disco 0
+disco 0: NVME SSD 1TB (NVMe)
+disco 1: IM2P33F3A NVMe ADATA 256GB (NVMe)
