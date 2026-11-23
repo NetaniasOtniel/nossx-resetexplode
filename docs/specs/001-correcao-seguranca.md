@@ -6,7 +6,7 @@
 | Decisão do dono | opção 1: corrigir G1 e G2 antes de qualquer execução do app |
 | Branch | `fix/seguranca` |
 | Data | 22–23/11/2026 |
-| Estado | implementado e no `main` (merge `0403bf6`, 23/11/2026); aceite na §6: **14/14** com o runtime de `Program Files\dotnet` 8.0.34 e a DLL oficial da Corsair 4.0.84 |
+| Estado | implementado e no `main` (merge `0403bf6`, 23/11/2026); regras de caminho e de assinatura testadas isoladamente em `5907c13`; aceite na §6: **17/17** com o runtime de `Program Files\dotnet` 8.0.34 e a DLL oficial da Corsair 4.0.84 |
 
 ## 1. Problema
 
@@ -88,20 +88,25 @@ Os candidatos dentro de `Corsair\` saíram da documentação do iCUE, mas não f
 
 ## 6. Critérios de aceite
 
-Testes em [tests/ResetExplode.Tests/SegurancaTests.cs](../../tests/ResetExplode.Tests/SegurancaTests.cs). Rodam sem elevação: `dotnet test tests/ResetExplode.Tests -c Release`.
+Testes em [tests/ResetExplode.Tests/SegurancaTests.cs](../../tests/ResetExplode.Tests/SegurancaTests.cs). Rodam sem elevação: `dotnet test tests/ResetExplode.Tests -c Release` (o teste da DLL oficial exige `RESETEXPLODE_CORSAIR_DLL` e falha sem ela, de propósito).
 
-| Id | Critério | Teste |
-|---|---|---|
-| G1-a | DLL sem assinatura é recusada (`TRUST_E_NOSIGNATURE`) e o instalador descarta em vez de avisar | `DllSemAssinatura_Recusada`, `Instalador_RecusaSemAssinatura` |
-| G1-a | assinatura válida de outro fabricante é recusada pelo `O=` exato | `OutroFabricante_Recusado` |
-| G1-b | uma DLL **validamente assinada**, copiada para `%TEMP%` com o nome `iCUESDK.x64_2019.dll`, não é carregada, e o motivo citado é a permissão (dono que não é admin, ou ACE que dá escrita a não-admin; a cópia em `%TEMP%` cai já na regra do dono) | `CaminhoGravavel_Ignorado` |
-| G1-b | todos os candidatos estão em Program Files; `%AppData%` reprova na ACL; o código não usa `AppSettings.Folder`, `NativeLibrary.TryLoad` nem o aviso antigo | `Candidatos_SoProgramFiles`, `Guarda_FonteCorsair` |
-| G1-c | abrir a aba não conecta a Corsair; só `CorsairActivateClicked` conecta; criar a ponte não tenta carregar | `AbrirAba_NaoCarregaDll` |
-| G1-c | na fonte, `InitInteg` usa `TabOpened` e não chama `LoadDll`; `LoadDll(` aparece uma vez e `ConnectCorsairAsync` só roda atrás de `plan.Corsair` | `Guarda_FonteDaAba` |
-| G1 | controle positivo: binário assinado (coreclr.dll, Microsoft) em Program Files passa na ACL, na assinatura e carrega | `ControlePositivo_CarregaDeLocalAdmin` |
-| G2-a | `OpenRGB.exe` com hash desconhecido é recusado, e `Launch` lança exceção antes do `Process.Start` | `OpenRgb_HashErrado_Recusado` |
-| G2-b | .exe certo com DLL plantada ao lado (`version.dll`), DLL alterada ou DLL faltando é recusado; pasta do usuário reprova na ACL | `OpenRgb_PastaAdulterada_Recusada` |
-| G2 | manifesto: 1.0 e 1.1, 16 binários cada, hashes bem formados | `Manifesto_Oficial` |
-| G2 | na fonte, não há busca em Downloads/Área de Trabalho e a abertura passa por `OpenRgbGuard.Launch` | `Guarda_FonteOpenRgb` |
+**G1 tem duas regras em série, e cada uma tem teste próprio** (commit `5907c13`). Em `LoadVerifiedLibrary`, a regra de **caminho** (`CheckAdminOnly`) roda antes da regra de **assinatura** (`WinVerifyTrust` + `O=` Corsair). Sem elevação não dá para criar uma pasta cujo dono seja Administradores, então os testes da assinatura injetam a regra de caminho. A injeção usa uma sobrecarga `internal` de `TrustedBinary.LoadVerifiedLibrary` e de `CorsairSdk.LoadDll`, visível só para `ResetExplode.Tests`; as sobrecargas públicas de produção continuam chamando `CheckAdminOnly`. A regra injetada aprova só a pasta temporária do teste e conta as chamadas. Assim cada teste prova que o caminho foi aprovado e que quem recusou foi a assinatura. Com uma mutação que remove a recusa por assinatura, os dois testes de recusa caem, e só eles.
+
+| Id | Regra | Critério | Teste |
+|---|---|---|---|
+| G1-a | assinatura | DLL **sem assinatura** num caminho **aprovado** é recusada com a mensagem exata `sem assinatura digital` (`TRUST_E_NOSIGNATURE`), também pelo `CorsairSdk.LoadDll` | `CaminhoPermitido_SemAssinatura_RecusadaPelaAssinatura` |
+| G1-a | assinante | DLL **assinada por outro fabricante** (o `coreclr.dll` da Microsoft renomeado para `iCUESDK.x64_2019.dll`) num caminho **aprovado** é recusada com a mensagem exata `assinado por outro fabricante (O=Microsoft Corporation)` | `CaminhoPermitido_OutroFabricante_RecusadaPeloAssinante` |
+| G1-a | assinatura + assinante | a **DLL oficial da Corsair** 4.0.84 num caminho **aprovado** é aceita, carregada (`DllLoaded`, `LoadedFrom`) e tem as exportações do SDK resolvidas | `CaminhoPermitido_DllOficialCorsair_Aceita` |
+| G1-a | assinatura (unidade) | `VerifySignature` devolve `TRUST_E_NOSIGNATURE` para PE sem assinatura; `O=` exato recusa a Microsoft; o instalador descarta a DLL sem assinatura em vez de avisar | `DllSemAssinatura_Recusada`, `OutroFabricante_Recusado`, `Instalador_RecusaSemAssinatura` |
+| G1-b | caminho | DLL **validamente assinada** copiada para `%TEMP%`, com dono igual ao usuário do teste, é recusada **pela regra de caminho**, com a mensagem exata `o dono de <arquivo> não é Administradores/SYSTEM/TrustedInstaller`, e a cópia continua com assinatura válida | `CaminhoGravavel_Ignorado` |
+| G1-b | caminho | a DLL oficial da Corsair fora de Program Files é recusada, mesmo com a assinatura aceita | `DllOficialCorsair_AssinaturaAceita_LocalRecusado` |
+| G1-b | caminho | todos os candidatos estão em Program Files; `%AppData%` reprova na ACL; o código não usa `AppSettings.Folder`, `NativeLibrary.TryLoad` nem o aviso antigo | `Candidatos_SoProgramFiles`, `Guarda_FonteCorsair` |
+| G1-c | ativação | abrir a aba não conecta a Corsair; só `CorsairActivateClicked` conecta; criar a ponte não tenta carregar | `AbrirAba_NaoCarregaDll` |
+| G1-c | ativação | na fonte, `InitInteg` usa `TabOpened` e não chama `LoadDll`; `LoadDll(` aparece uma vez e `ConnectCorsairAsync` só roda atrás de `plan.Corsair` | `Guarda_FonteDaAba` |
+| G1 | caminho + assinatura | controle positivo: binário assinado (coreclr.dll, Microsoft) em Program Files passa na ACL, na assinatura e carrega | `ControlePositivo_CarregaDeLocalAdmin` |
+| G2-a | hash | `OpenRGB.exe` com hash desconhecido é recusado, e `Launch` lança exceção antes do `Process.Start` | `OpenRgb_HashErrado_Recusado` |
+| G2-b | hash + caminho | .exe certo com DLL plantada ao lado (`version.dll`), DLL alterada ou DLL faltando é recusado; pasta do usuário reprova na ACL | `OpenRgb_PastaAdulterada_Recusada` |
+| G2 | manifesto | manifesto: 1.0 e 1.1, 16 binários cada, hashes bem formados | `Manifesto_Oficial` |
+| G2 | fonte | na fonte, não há busca em Downloads/Área de Trabalho e a abertura passa por `OpenRgbGuard.Launch` | `Guarda_FonteOpenRgb` |
 
 **Pendente de teste manual (com o app elevado):** abrir a aba Integração e conferir que `iCUESDK` não aparece nos módulos do processo; escolher um OpenRGB 1.1 em Downloads e ver a cópia para Program Files.
