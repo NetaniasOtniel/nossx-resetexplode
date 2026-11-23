@@ -6,7 +6,7 @@
 | Decisão do dono | opção 1: corrigir G1 e G2 antes de qualquer execução do app |
 | Branch | `fix/seguranca` |
 | Data | 22–23/11/2026 |
-| Estado | implementado; aceite na §6 |
+| Estado | implementado e no `main` (merge `0403bf6`, 23/11/2026); aceite na §6: **14/14** com o runtime de `Program Filesdotnet` 8.0.34 e a DLL oficial da Corsair 4.0.84 |
 
 ## 1. Problema
 
@@ -94,7 +94,7 @@ Testes em [tests/ResetExplode.Tests/SegurancaTests.cs](../../tests/ResetExplode.
 |---|---|---|
 | G1-a | DLL sem assinatura é recusada (`TRUST_E_NOSIGNATURE`) e o instalador descarta em vez de avisar | `DllSemAssinatura_Recusada`, `Instalador_RecusaSemAssinatura` |
 | G1-a | assinatura válida de outro fabricante é recusada pelo `O=` exato | `OutroFabricante_Recusado` |
-| G1-b | uma DLL **validamente assinada**, copiada para `%TEMP%` com o nome `iCUESDK.x64_2019.dll`, não é carregada, e o motivo citado é a permissão | `CaminhoGravavel_Ignorado` |
+| G1-b | uma DLL **validamente assinada**, copiada para `%TEMP%` com o nome `iCUESDK.x64_2019.dll`, não é carregada, e o motivo citado é a permissão (dono que não é admin, ou ACE que dá escrita a não-admin; a cópia em `%TEMP%` cai já na regra do dono) | `CaminhoGravavel_Ignorado` |
 | G1-b | todos os candidatos estão em Program Files; `%AppData%` reprova na ACL; o código não usa `AppSettings.Folder`, `NativeLibrary.TryLoad` nem o aviso antigo | `Candidatos_SoProgramFiles`, `Guarda_FonteCorsair` |
 | G1-c | abrir a aba não conecta a Corsair; só `CorsairActivateClicked` conecta; criar a ponte não tenta carregar | `AbrirAba_NaoCarregaDll` |
 | G1-c | na fonte, `InitInteg` usa `TabOpened` e não chama `LoadDll`; `LoadDll(` aparece uma vez e `ConnectCorsairAsync` só roda atrás de `plan.Corsair` | `Guarda_FonteDaAba` |

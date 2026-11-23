@@ -7,6 +7,7 @@
 | Método | leitura estática do código-fonte (14.104 linhas C#), varredura de rede, processo, registro, remoção e carga dinâmica; checagem Authenticode dos binários versionados; inspeção do pacote NuGet do LibreHardwareMonitorLib |
 | Nada foi executado | nem build, nem o app. Só `Get-AuthenticodeSignature` (leitura) e o download do `.nupkg` para inspeção |
 | Veredito | **PORTÃO ACIONADO**: 2 caminhos de execução de binário não verificado dentro de um processo com privilégio de administrador (G1, G2). Nenhuma rede para destino desconhecido. Nenhum código ofuscado. |
+| Estado (23/11/2026) | **G1 e G2 CORRIGIDOS** pelo [spec 001](001-correcao-seguranca.md): `a2547ef` (correção + 14 testes), `1789e73` (ajuste de teste), merge `0403bf6` na `main`. **A6 resolvido** em `d528e8f` (workflow só `workflow_dispatch`). Testes 14/14 com o runtime de `Program Files\dotnet` e a DLL oficial da Corsair 4.0.84. |
 
 ## 1. Contexto
 
@@ -22,12 +23,14 @@ Arquivos citados no pedido que **não existem** na v0.16: `AdminDir.cs` (nenhuma
 - [MainWindow.Integ.cs:78](../../MainWindow.Integ.cs) e [:132](../../MainWindow.Integ.cs): isso acontece **sozinho na primeira vez que a aba Integração é aberta** (`_ = ConnectAllAsync()` → `_cue.LoadDll()`). Não precisa clicar em nada.
 - [CorsairSdkInstaller.cs:118](../../CorsairSdkInstaller.cs): o botão "BAIXAR O SDK DA CORSAIR" aceita DLL **sem assinatura** (`TRUST_E_NOSIGNATURE`) só com um aviso e copia para `%AppData%\ResetExplode`.
 - **Por que importa:** `%AppData%` é gravável por qualquer processo do usuário sem elevação. Um malware sem privilégio que plante esse nome de arquivo ali ganha execução como administrador na próxima vez que alguém abrir a aba. É um caminho clássico de escalada de privilégio (DLL planting).
+- ✅ **Corrigido** em `a2547ef` (merge `0403bf6`), spec 001 §4.1–4.2: a DLL só sai de `Program Files` (arquivo, pasta e ancestrais sem direito de escrita para não-admin); `WinVerifyTrust` com revogação na cadeia inteira e assinante `O=Corsair Memory, Inc.` por igualdade exata; `LoadLibraryExW(..., LOAD_LIBRARY_SEARCH_SYSTEM32)` com o arquivo travado contra escrita entre a conferência e a carga; abrir a aba não carrega a DLL (só o botão **ATIVAR CONTROLE CORSAIR**); o instalador recusa DLL sem assinatura válida e grava só em `%ProgramFiles%\ResetExplode`. `%AppData%`, `x64\` e a ordem padrão de busca saíram.
 
 ### G2 — OpenRGB.exe de Downloads/Área de Trabalho aberto elevado sem verificação (ALTO)
 
 - [MainWindow.Integ.cs:223-247](../../MainWindow.Integ.cs): `FindOpenRgb()` aceita `OpenRGB.exe` de `Program Files`, `%LocalAppData%\Programs`, e de **qualquer subpasta `OpenRGB*` em `Downloads` ou na Área de Trabalho**.
 - [MainWindow.Integ.cs:264](../../MainWindow.Integ.cs): o botão "ABRIR O OPENRGB" faz `Process.Start(exe, "--server --startminimized")` com `UseShellExecute = true` a partir do processo elevado. **O filho herda o administrador. Sem checagem de assinatura.**
 - **Por que importa:** qualquer `OpenRGB.exe` largado numa pasta `Downloads\OpenRGB-qualquercoisa\` vira código de administrador ao clicar no botão. Exige clique (menos grave que G1), mas é exatamente "binário não verificado executado".
+- ✅ **Corrigido** em `a2547ef` (merge `0403bf6`), spec 001 §4.3: sem busca em `Downloads`/Área de Trabalho; o dono escolhe o `OpenRGB.exe` num seletor e o caminho fica salvo; antes de cada execução elevada, os **16 binários** da pasta são conferidos por SHA-256 contra o manifesto das releases oficiais 1.0 e 1.1 gravado no código (binário extra ou faltando também recusa); pasta gravável pelo usuário é copiada para `%ProgramFiles%\ResetExplode\OpenRGB\<versão>` e conferida de novo lá; o OpenRGB abre com `--config` numa pasta trancada de `%ProgramData%` (ele carrega plugins da pasta de configuração).
 
 ## 3. Rede: todos os destinos são conhecidos
 
@@ -116,16 +119,20 @@ Nenhum. `Convert.FromBase64String` aparece só em [AppSettings.cs:87](../../AppS
 | A3 | médio | jogos e auxiliares com argumentos são abertos elevados | [GameLauncher.cs:168](../../GameLauncher.cs), :182 |
 | A4 | baixo | `winget.exe` executado elevado a partir de `%LocalAppData%\Microsoft\WindowsApps` (pasta do usuário; é o alias oficial, mas o caminho é gravável sem elevação) | [AppInstaller.cs:59-60](../../AppInstaller.cs) |
 | A5 | baixo | chave da HowManyFPS enviada em dois cabeçalhos ao mesmo tempo | [HowManyFpsClient.cs:60-61](../../HowManyFpsClient.cs) |
-| A6 | operacional | o workflow `publicar.yml` **apaga e recria a release `latest`** a cada push na `main`. No fork, o Actions está habilitado no nível do repositório; se o workflow for ativado, o push da etapa 8 publica um .exe no fork | [.github/workflows/publicar.yml:44-45](../../.github/workflows/publicar.yml) |
+| A6 | operacional | o workflow `publicar.yml` **apaga e recria a release `latest`** a cada push na `main`. No fork, o Actions está habilitado no nível do repositório; se o workflow for ativado, o push da etapa 8 publica um .exe no fork. ✅ **Resolvido** em `d528e8f`: gatilho só `workflow_dispatch` (nenhum push nem tag publica) | [.github/workflows/publicar.yml:44-45](../../.github/workflows/publicar.yml) |
 | A7 | operacional | o "Otimizar" mata processos com `Kill()` sem salvar | [Optimizer.cs:122](../../Optimizer.cs) |
 
 ## 12. Regras para as próximas etapas (enquanto G1 e G2 estiverem abertos)
 
-1. Não abrir a aba **Integração** (dispara o G1 sozinha) nem clicar em "ABRIR O OPENRGB".
+> G1 e G2 fechados em 23/11/2026 (merge `0403bf6`): a regra 1 deixa de valer; as regras 2 e 3 continuam valendo para o diagnóstico.
+
+1. ~~Não abrir a aba **Integração** (dispara o G1 sozinha) nem clicar em "ABRIR O OPENRGB".~~
 2. Não usar: stress test, RESET OC, limpeza de portas COM, remoção/reinstalação de drivers, Otimizar, ajustes do Windows, gerenciador de inicialização, instalador de apps, download de driver.
 3. A aba Drivers faz uma consulta automática à NVIDIA ao abrir: aceitável (destino conhecido, só envia o modelo da GPU), mas evitável no diagnóstico.
 
-## 13. Correção proposta para G1 e G2 (aguarda decisão do dono)
+## 13. Correção proposta para G1 e G2 (histórico)
+
+> O dono escolheu a opção 1 em 22/11/2026, com exigências mais fortes que esta proposta (Authenticode também para a pasta do .exe, hash do OpenRGB em vez de abrir sem elevação). A correção aplicada é a do [spec 001](001-correcao-seguranca.md); o texto abaixo fica como registro.
 
 - **G1:** em `LoadDll`, procurar só na pasta do .exe (instalação controlada pelo admin) e em `%AppData%` **apenas se** `WinVerifyTrust == 0` e o assinante for a Corsair; remover o `NativeLibrary.TryLoad(nome)` da ordem padrão; no instalador, recusar DLL sem assinatura em vez de só avisar.
 - **G2:** procurar o OpenRGB só em `Program Files`, e abrir sempre sem elevação (via `explorer.exe`, como o próprio app já faz no [GameLauncher.cs:181](../../GameLauncher.cs)).
