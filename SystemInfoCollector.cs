@@ -32,8 +32,32 @@ public static class SystemInfoCollector
             yield return mo;
     }
 
-    private static string S(ManagementObject mo, string prop)
-        => mo[prop]?.ToString()?.Trim() ?? "—";
+    private static string S(ManagementObject mo, string prop) => Clean(mo[prop]?.ToString());
+
+    /// <summary>Spec 002, D11: textos de preenchimento que fabricantes deixam no SMBIOS viram "—".</summary>
+    internal static string Clean(string? s)
+    {
+        s = s?.Trim();
+        if (string.IsNullOrEmpty(s)) return "—";
+        return SmbiosPlaceholders.Contains(s) ? "—" : s;
+    }
+
+    private static readonly HashSet<string> SmbiosPlaceholders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Default string", "To be filled by O.E.M.", "To Be Filled By O.E.M.", "System Product Name", "System manufacturer",
+        "System Version", "Not Specified", "Not Applicable", "Base Board Version", "x.x", "None",
+    };
+
+    /// <summary>Spec 002, D5: tamanho de disco em base 1000, como no rótulo do produto, no smartctl e no TBW.</summary>
+    internal static string DiskBytes(object? v)
+    {
+        if (v == null) return "—";
+        double b = Convert.ToDouble(v);
+        string[] u = { "B", "KB", "MB", "GB", "TB" };
+        int i = 0;
+        while (b >= 1000 && i < u.Length - 1) { b /= 1000; i++; }
+        return $"{b:0.##} {u[i]}";
+    }
 
     private static string Bytes(object? v)
     {
@@ -88,9 +112,28 @@ public static class SystemInfoCollector
             cpu.Add("Clock base/máx. declarado", S(c, "MaxClockSpeed") + " MHz");
             cpu.Add("Cache L2", S(c, "L2CacheSize") + " KB");
             cpu.Add("Cache L3", S(c, "L3CacheSize") + " KB");
-            cpu.Add("Virtualização habilitada", S(c, "VirtualizationFirmwareEnabled"));
+            cpu.Add("Virtualização habilitada", Virtualization(c["VirtualizationFirmwareEnabled"] as bool?, HypervisorPresent()));
         }
     }
+
+    private static bool? HypervisorPresent()
+    {
+        try { foreach (var cs in Query("SELECT HypervisorPresent FROM Win32_ComputerSystem")) return cs["HypervisorPresent"] as bool?; }
+        catch { }
+        return null;
+    }
+
+    /// <summary>
+    /// Spec 002, D6: com Hyper-V/VBS ativo o Windows devolve VirtualizationFirmwareEnabled = False mesmo com VT-x/AMD-V ligado;
+    /// um hypervisor rodando é a prova de que está ligado.
+    /// </summary>
+    internal static string Virtualization(bool? firmwareEnabled, bool? hypervisorPresent) => (firmwareEnabled, hypervisorPresent) switch
+    {
+        (_, true) => "Sim (hypervisor do Windows ativo: Hyper-V/VBS)",
+        (true, _) => "Sim",
+        (false, false) => "Não (desligada na BIOS ou sem suporte)",
+        _ => "—",
+    };
 
     private static string RamType(object? smbios, object? typeLegacy)
     {
@@ -178,7 +221,8 @@ public static class SystemInfoCollector
             int conf = mods.Where(m => m.Conf > 0).Select(m => m.Conf).DefaultIfEmpty(0).Min();
             int rated = mods.Select(m => m.Rated).DefaultIfEmpty(0).Max();
             sum.Add("Velocidade em uso", conf > 0 ? $"{conf} MT/s" : "—");
-            sum.Add("Velocidade nominal reportada pelo módulo", rated > 0 ? $"{rated} MT/s" : "—");
+            // Spec 002, D3: Win32_PhysicalMemory.Speed é o que a BIOS escreve no SMBIOS, não o nominal do módulo (esse vem do SPD, em ApplySpd).
+            sum.Add(SpeedBiosLabel, rated > 0 ? $"{rated} MT/s" : "—");
 
             // Perfil EXPO/XMP: o Windows não diz se está ligado; estimamos pela velocidade escrita no part number.
             int label = 0;
@@ -217,7 +261,7 @@ public static class SystemInfoCollector
             var volts = mods.Select(m => m.VoltCfg).Where(v => v != "—").Distinct().ToList();
             if (volts.Count > 0) sum.Add("Tensão em uso", string.Join(" / ", volts));
         }
-        sum.Add("Timings (CL, tRCD, tRP...)", "O Windows não expõe. Veja na BIOS ou com o CPU-Z (aba Memory/SPD).");
+        sum.Add(TimingsLabel, "Lendo o SPD dos módulos… (precisa dos sensores abertos, como administrador)");
 
         try
         {
@@ -240,7 +284,7 @@ public static class SystemInfoCollector
             slot.Add("Formato", m.Form);
             slot.Add("Ranks", m.Rank);
             slot.Add("Velocidade em uso", m.Conf > 0 ? $"{m.Conf} MT/s" : "—");
-            slot.Add("Velocidade nominal", m.Rated > 0 ? $"{m.Rated} MT/s" : "—");
+            slot.Add(SpeedBiosLabel, m.Rated > 0 ? $"{m.Rated} MT/s" : "—");
             slot.Add("Tensão em uso", m.VoltCfg);
             slot.Add("Faixa de tensão do módulo", m.VoltRange);
             slot.Add("Largura de dados / total", m.DataW > 0 ? $"{m.DataW} / {m.TotalW} bits" : "—");
@@ -269,13 +313,134 @@ public static class SystemInfoCollector
         catch (Exception ex) { n.Add("Erro ao ler", ex.Message); }
     }
 
+    /// <summary>Spec 002, D4: barramento real pelo MSFT_PhysicalDisk (o mesmo do DiskHealth); Win32_DiskDrive diz "SCSI" para NVMe.</summary>
+    private static Dictionary<int, string> BusByDiskIndex()
+    {
+        var map = new Dictionary<int, string>();
+        try
+        {
+            var scope = new ManagementScope(@"\\.\root\Microsoft\Windows\Storage");
+            scope.Connect();
+            using var s = new ManagementObjectSearcher(scope, new ObjectQuery("SELECT DeviceId, BusType FROM MSFT_PhysicalDisk"));
+            foreach (ManagementObject d in s.Get())
+                if (int.TryParse(d["DeviceId"]?.ToString(), out int idx) && BusName(Convert.ToInt32(d["BusType"] ?? 0)) is { } bus)
+                    map[idx] = bus;
+        }
+        catch { }
+        return map;
+    }
+
+    internal static string? BusName(int busType) => busType switch
+    {
+        17 => "NVMe", 11 => "SATA", 7 => "USB", 10 => "SAS", 8 => "RAID", 3 => "ATA", 1 => "SCSI", 12 => "SD", 13 => "MMC", 15 => "Arquivo (VHD)",
+        _ => null,
+    };
+
+    // ---------------------------------------------------------------- SPD da RAM (spec 002, D2 e D3)
+
+    public const string TimingsLabel = "Timings (CL, tRCD, tRP...)";
+    public const string SpeedBiosLabel = "Velocidade máxima informada pela BIOS (SMBIOS)";
+    public const string SpeedSpdLabel = "Velocidade nominal do módulo (SPD)";
+
+    /// <summary>Timings do SPD de um módulo, em ns, como o LHM lê (sensores "Timing" de cada DIMM).</summary>
+    public sealed record SpdTimings(string Module, double TckMin, double Taa, double Trcd, double Trp, double Tras, double Trc);
+
+    /// <summary>Lê os timings do SPD nas linhas de sensores do LHM (HardwareType.Memory, categoria Timing).</summary>
+    public static List<SpdTimings> ReadSpd(IEnumerable<SensorRow> rows)
+    {
+        var list = new List<SpdTimings>();
+        foreach (var g in rows.Where(r => r.HardwareType == LibreHardwareMonitor.Hardware.HardwareType.Memory
+                                       && r.Type == LibreHardwareMonitor.Hardware.SensorType.Timing)
+                              .GroupBy(r => r.Hardware))
+        {
+            double? T(string name) => g.FirstOrDefault(r => r.Name.StartsWith(name + " ", StringComparison.Ordinal) || r.Name == name)?.RawValue;
+            if (T("tCKAVGmin") is double ck && ck > 0 && T("tAA") is double aa && T("tRCD") is double rcd && T("tRP") is double rp)
+                list.Add(new SpdTimings(g.Key, ck, aa, rcd, rp, T("tRAS") ?? 0, T("tRC") ?? 0));
+        }
+        return list;
+    }
+
+    /// <summary>MT/s nominal a partir do tCKAVGmin (ns): DDR transfere duas vezes por ciclo.</summary>
+    public static int RatedMts(double tckMinNs)
+    {
+        double mts = 2000.0 / tckMinNs;
+        int bin = SpeedBins.OrderBy(b => Math.Abs(b - mts)).First();
+        return Math.Abs(bin - mts) / mts < 0.01 ? bin : (int)Math.Round(mts); // 0,750 ns = 2666,7 → "2666", como o JEDEC escreve
+    }
+
+    private static readonly int[] SpeedBins =
+        { 1600, 1866, 2133, 2400, 2666, 2933, 3200, 3600, 4000, 4400, 4800, 5200, 5600, 6000, 6400, 6800, 7200, 7600, 8000, 8400, 8800 };
+
+    /// <summary>Ciclos de clock para um tempo em ns na velocidade dada, com o arredondamento do JEDEC (fator de correção 0,974).</summary>
+    public static int Cycles(double ns, int mts)
+    {
+        if (ns <= 0 || mts <= 0) return 0;
+        long tckPs = (long)Math.Round(2_000_000.0 / mts); // ps por ciclo
+        long tPs = (long)Math.Round(ns * 1000);
+        return (int)((tPs * 1000 / tckPs + 974) / 1000);
+    }
+
+    public static string Primary(SpdTimings t, int mts) =>
+        $"{Cycles(t.Taa, mts)}-{Cycles(t.Trcd, mts)}-{Cycles(t.Trp, mts)}-{Cycles(t.Tras, mts)} @ {mts} MT/s";
+
+    /// <summary>
+    /// Troca o texto fixo de timings pelo SPD lido pelo LHM e põe o nominal do módulo. Devolve true se mudou algo
+    /// (a tela então reexibe o nó). Chamado depois que os sensores abrem: o SystemInfoCollector em si só lê WMI.
+    /// </summary>
+    public static bool ApplySpd(InfoNode ram, IEnumerable<SensorRow> rows)
+    {
+        var sum = ram.Children.FirstOrDefault(c => c.Header == "Resumo");
+        var timings = sum?.Children.FirstOrDefault(c => c.Header == TimingsLabel);
+        if (sum == null || timings == null) return false;
+        var spd = ReadSpd(rows);
+        if (spd.Count == 0)
+        {
+            timings.Value = "Não foi possível ler o SPD dos módulos (o app precisa estar como administrador, com o PawnIO). Veja na BIOS.";
+            return true;
+        }
+        int inUse = 0;
+        var speedNode = sum.Children.FirstOrDefault(c => c.Header == "Velocidade em uso");
+        if (speedNode != null) int.TryParse(new string(speedNode.Value.TakeWhile(char.IsDigit).ToArray()), out inUse);
+
+        var groups = spd.GroupBy(t => (t.TckMin, t.Taa, t.Trcd, t.Trp, t.Tras)).ToList();
+        var parts = new List<string>();
+        foreach (var g in groups)
+        {
+            var t = g.First();
+            int rated = RatedMts(t.TckMin);
+            string who = groups.Count > 1 ? string.Join(", ", g.Select(x => x.Module)) + ": " : "";
+            string s = $"{who}SPD {Primary(t, rated)}";
+            if (inUse > 0 && inUse != rated) s += $"; na velocidade em uso equivalem a {Primary(t, inUse)}";
+            parts.Add(s + $" (tAA {t.Taa:0.##} ns, tRCD {t.Trcd:0.##} ns, tRP {t.Trp:0.##} ns, tRAS {t.Tras:0.##} ns)");
+        }
+        timings.Value = string.Join(" · ", parts) +
+                        ". São os valores de fábrica gravados no módulo; os timings exatos que a BIOS configurou não são lidos.";
+
+        int ratedAll = spd.Select(t => RatedMts(t.TckMin)).Min();
+        var ratedNode = sum.Children.FirstOrDefault(c => c.Header == SpeedSpdLabel);
+        string ratedText = $"{RamKind(ram)}-{ratedAll} ({ratedAll} MT/s, lido do SPD)";
+        if (ratedNode == null)
+        {
+            int at = sum.Children.FindIndex(c => c.Header == SpeedBiosLabel);
+            var node = new InfoNode { Header = SpeedSpdLabel, Value = ratedText };
+            if (at >= 0) sum.Children.Insert(at, node); else sum.Children.Add(node);
+        }
+        else ratedNode.Value = ratedText;
+        return true;
+    }
+
+    private static string RamKind(InfoNode ram) =>
+        ram.Children.FirstOrDefault(c => c.Header == "Resumo")?.Children.FirstOrDefault(c => c.Header == "Tipo")?.Value is { Length: > 0 } t && t != "—" ? t : "DDR";
+
     private static void CollectDisks(InfoNode n)
     {
+        var bus = BusByDiskIndex();
         foreach (var d in Query("SELECT * FROM Win32_DiskDrive"))
         {
             var disk = n.Add(S(d, "Model"));
-            disk.Add("Capacidade", Bytes(d["Size"]));
-            disk.Add("Interface", S(d, "InterfaceType"));
+            disk.Add("Capacidade", DiskBytes(d["Size"]));
+            int idx = Convert.ToInt32(d["Index"] ?? -1);
+            disk.Add("Interface", bus.TryGetValue(idx, out var b) ? b : S(d, "InterfaceType"));
             disk.Add("Nº de série", S(d, "SerialNumber"));
             disk.Add("Firmware", S(d, "FirmwareRevision"));
         }

@@ -157,7 +157,7 @@ public partial class MainWindow
                          .Select(ReportBuilder.ToNode).Where(n => n != null).Cast<ReportNode>().ToList(),
                 Gpus = _gpus.Select(g => new ReportGpu(g.Name, g.Subtitle,
                          g.Sections.Select(ReportBuilder.ToNode).Where(n => n != null).Cast<ReportNode>().ToList())).ToList(),
-                Sensors = sensorsSnapshot.Select(s => new ReportSensor(s.Hardware, s.Category, s.Name, s.Value, s.Min, s.Max)).ToList(),
+                Sensors = sensorsSnapshot.Select(s => new ReportSensor(s.Hardware, s.Category, s.Label, s.Value, s.Min, s.Max)).ToList(),
                 Benchmarks = BuildBenchList(),
             };
             var disks = await Task.Run(() => DiskHealth.Read(sensorsSnapshot));
