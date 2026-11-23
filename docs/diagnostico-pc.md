@@ -7,7 +7,8 @@
 | Coleta principal | `tools\diagnostico.ps1` elevado (um UAC) → `diag\20261123-083338` (12 amostras × 5 s, mesmas classes da tela: `SystemInfoCollector`, `GpuInfoCollector`, `SensorMonitor`, `DiskHealth`) |
 | Coleta da GPU | `Diagnostico.dll` sem elevação + `nvidia-smi -l 5` **na mesma janela** → `diag\20261123-095528-gpu-sem-elevacao` |
 | Referências | `smartctl` 7.5 (`-x -j`), `Get-PhysicalDisk`/`Get-StorageReliabilityCounter`, `nvidia-smi` (driver 621.24), WMI `Win32_ComputerSystem.HypervisorPresent`, SPD dos módulos contra a tabela JEDEC DDR4, configuração `B360M_H` (mesmo chip IT8686E) do próprio LHM |
-| HWiNFO64 8.60 | ⏳ **pendente**: aberto (PID 24300), mas com *Shared Memory Support* desligado; a coleta esperou 10 min e uma vigia segue esperando. As colunas "HWiNFO" abaixo serão preenchidas pela próxima coleta |
+| HWiNFO64 8.60 | **pendente**: aberto (PID 24300), mas com *Shared Memory Support* desligado das 08:43 às 14:10. Por decisão do dono, a comparação virou item pendente ([spec 002 §7](specs/002-correcoes-leitura.md)); as tensões da placa saem como "estimado (escala da B360M H)" |
+| Coleta do build corrigido | `fix/leituras`, elevada, 23/11 14:10 → `diag\20261123-101010-fix-elevado`; resultado por item no [spec 002 §6](specs/002-correcoes-leitura.md) |
 | Não rodado | stress test, RESET OC, limpeza de COM, remoção de drivers, Otimizar (spec 000 §12) |
 | TPM | VigiaTPM 430 eventos antes e depois da coleta elevada (nenhum Clear armado); nada de `Win32_Tpm`/`Win32_DeviceGuard` |
 
@@ -57,7 +58,7 @@ Os 348 desligamentos inseguros no NVMe de 1 TB (e 299 no ADATA) indicam muitas q
 
 ## 4. ResetExplode × referência
 
-Legenda: ✅ bate · ⚠️ diverge · ❌ ausente ou impossível · ⏳ falta a leitura do HWiNFO.
+Legenda: ✅ bate · ⚠️ diverge · ❌ ausente ou impossível · 🕓 pendente de HWiNFO (spec 002 §7). As colunas descrevem o build original (`ead9e59`); o build corrigido está no spec 002 §6.
 
 ### 4.1 Sistema e RAM
 
@@ -66,7 +67,7 @@ Legenda: ✅ bate · ⚠️ diverge · ❌ ausente ou impossível · ⏳ falta a
 | Virtualização habilitada | **False** | `HypervisorPresent = True`: com hypervisor ativo o Windows zera `VirtualizationFirmwareEnabled`; VT-x está ligado | ⚠️ | D6 |
 | Velocidade nominal da RAM | 2666 MT/s ("reportada pelo módulo") | SPD: DDR4-3200 (tCKmin 0,625 ns); o 2666 é o que a BIOS escreve no SMBIOS | ⚠️ | D3 |
 | Timings | "O Windows não expõe" | o LHM do próprio app já lê o SPD: tAA/tRCD/tRP 13,75 ns, tRAS 32 ns, tRC 45,75 ns, tRFC1 350 ns (iguais nos 4 módulos) | ❌ | D2 |
-| Timings em uso (registradores do controlador) | — | ⏳ HWiNFO "Memory Timings" | ⏳ | D2 |
+| Timings em uso (registradores do controlador) | — | HWiNFO "Memory Timings" | 🕓 | D2 |
 | Perfil EXPO/XMP | "Sem como estimar" | correto: módulos JEDEC sem XMP, e o B360 limita a 2666 | ✅ | — |
 | Velocidade em uso, canais, rank, tensão | 2666, 2 canais, single, 1,20 V | WMI/SPD | ✅ | — |
 | Placa-mãe "Versão" | "Default string" | texto de preenchimento da Gigabyte no SMBIOS | ⚠️ (cosmético) | D11 |
@@ -76,31 +77,31 @@ Legenda: ✅ bate · ⚠️ diverge · ❌ ausente ou impossível · ⏳ falta a
 
 | Item | ResetExplode | Referência | | Id |
 |---|---|---|---|---|
-| Temperaturas por núcleo / Package | 41–50 °C | ⏳ HWiNFO | ⏳ | — |
-| CPU Package / Cores (W) | 51–73 / 48–71 W | ⏳ HWiNFO | ⏳ | — |
-| **CPU Memory** e **CPU Platform** | **0 W** fixo nas 12 amostras | o LHM ativa o sensor quando o MSR (0x619, 0x64D) é legível, mas no Coffee Lake de desktop o contador não avança ([IntelCpu.cs:478-499](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/3d331e3/LibreHardwareMonitorLib/Hardware/Cpu/IntelCpu.cs#L478-L499)); ⏳ HWiNFO para confirmar que ele não expõe esses domínios | ❌ | D8 |
-| Tensões "CPU Core #1–8" | 0,98–1,32 V | são VIDs pedidos por núcleo (MSR 0x198), não a tensão medida; ⏳ HWiNFO ("Core VIDs") | ⏳ | D12 |
+| Temperaturas por núcleo / Package | 41–50 °C | HWiNFO; a distância ao TjMax (100 °C) fecha com o valor absoluto | 🕓 | — |
+| CPU Package / Cores (W) | 51–73 / 48–71 W | HWiNFO; no build corrigido, 12,9–22,2 W com a CPU a 4 % (plausível em repouso) | 🕓 | — |
+| **CPU Memory** e **CPU Platform** | **0 W** fixo nas 12 amostras | o LHM ativa o sensor quando o MSR (0x619, 0x64D) é legível, mas no Coffee Lake de desktop o contador não avança ([IntelCpu.cs:478-499](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/3d331e3/LibreHardwareMonitorLib/Hardware/Cpu/IntelCpu.cs#L478-L499)); se o HWiNFO expõe esses domínios: 🕓 | ❌ → corrigido (fora da lista) | D8 |
+| Tensões "CPU Core #1–8" | 0,98–1,32 V | são VIDs pedidos por núcleo (MSR 0x198), não a tensão medida; valores contra o HWiNFO ("Core VIDs"): 🕓 | ⚠️ → corrigido ("VID núcleo #n") | D12 |
 | CPU Core (tensão) | 0,99–1,244 V | bate com a entrada 0 da IT8686E (Vcore 1,176–1,38 V) | ✅ | — |
-| Clocks | 3700–4701 MHz | ⏳ HWiNFO | ⏳ | — |
+| Clocks | 3700–4701 MHz | HWiNFO | 🕓 | — |
 
 ### 4.3 Placa-mãe (IT8686E)
 
 A placa **não está na tabela do LHM** (nem na 0.9.6, commit `3d331e3`, nem no `master` de 26/10/2026): o chip cai no `default` ([SuperIOHardware.cs:2704-2723](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/3d331e3/LibreHardwareMonitorLib/Hardware/Motherboard/SuperIOHardware.cs#L2704-L2723)), que cria "Voltage #1–7" **sem escala e ocultas por padrão**, "Temperature #n" e "Fan #n". O ResetExplode ignora o "oculto por padrão" e mostra o valor cru do pino.
 
-| Canal | ResetExplode | Com a escala da `B360M_H` (mesmo chip, [SuperIOHardware.cs:2072-2090](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/3d331e3/LibreHardwareMonitorLib/Hardware/Motherboard/SuperIOHardware.cs#L2072-L2090)) | HWiNFO | | Id |
+| Canal | ResetExplode | Com a escala da `B360M_H` (mesmo chip, [SuperIOHardware.cs:2072-2090](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/3d331e3/LibreHardwareMonitorLib/Hardware/Motherboard/SuperIOHardware.cs#L2072-L2090)) | Build corrigido (14:10) e estado | | Id |
 |---|---|---|---|---|---|
-| Voltage #1 | 1,236 V | Vcore 1,236 V | ⏳ | ⚠️ nome | D1 |
-| Voltage #2 | **2,028 V** | +3,3 V = 2,028 × (1 + 29,4/45,3) = **3,344 V** | ⏳ | ❌ | D1 |
-| Voltage #3 | **2,028 V** | +12 V = 2,028 × (1 + 10/2) = **12,17 V** | ⏳ | ❌ | D1 |
-| Voltage #4 | **1,98 V** | +5 V = 1,98 × (1 + 15/10) = **4,95 V** | ⏳ | ❌ | D1 |
-| Voltage #6 | 1,188 V | VCCSA 1,188 V | ⏳ | ⚠️ nome | D1 |
-| Voltage #7 | 1,248 V | DIMM A/B 1,248 V (DDR4 nominal 1,2 V) | ⏳ | ⚠️ nome | D1 |
-| +3V Standby / CMOS Battery | 3,384 / 3,168 V | já escalados pelo `default` | ⏳ | ✅ | — |
-| Temperature #1–6 | 40 / 44 / 46 / 39 / 49 / 40 °C | `B360M_H`: #1 System, #2 PCH, #3 CPU, #5 VRM MOS; #4 e #6 sem nome | ⏳ | ⚠️ nomes | D1 |
-| Fan #1–4 | 2273 / 0 / 1201 / 1709 RPM | `B360M_H`: #1 CPU Fan, #2 System Fan; demais sem nome | ⏳ | ⚠️ nomes | D1 |
-| Controle "Fan #1–5" | **—** nas 12 amostras | linha sem valor nenhum | ⏳ | ❌ | D9 |
+| Voltage #1 | 1,236 V | Vcore 1,236 V | Vcore 0,684–1,284 V · estimado · HWiNFO 🕓 | ⚠️ nome | D1 |
+| Voltage #2 | **2,028 V** | +3,3 V = 2,028 × (1 + 29,4/45,3) = **3,344 V** | +3.3V 3,344–3,364 V · estimado · HWiNFO 🕓 | ❌ | D1 |
+| Voltage #3 | **2,028 V** | +12 V = 2,028 × (1 + 10/2) = **12,17 V** | +12V 12,24 V · estimado · HWiNFO 🕓 | ❌ | D1 |
+| Voltage #4 | **1,98 V** | +5 V = 1,98 × (1 + 15/10) = **4,95 V** | +5V 4,98–5,04 V · estimado · HWiNFO 🕓 | ❌ | D1 |
+| Voltage #6 | 1,188 V | VCCSA 1,188 V | VCCSA 1,188–1,200 V · estimado · HWiNFO 🕓 | ⚠️ nome | D1 |
+| Voltage #7 | 1,248 V | DIMM A/B 1,248 V (DDR4 nominal 1,2 V) | DIMM A/B 1,248–1,260 V · estimado · HWiNFO 🕓 | ⚠️ nome | D1 |
+| +3V Standby / CMOS Battery | 3,384 / 3,168 V | já escalados pelo `default` | 3,384 / 3,168 V · estimado · HWiNFO 🕓 | ✅ | — |
+| Temperature #1–6 | 40 / 44 / 46 / 39 / 49 / 40 °C | `B360M_H`: #1 System, #2 PCH, #3 CPU, #5 VRM MOS; #4 e #6 sem nome | System / PCH / CPU / VRM MOS nomeados; #4 e #6 seguem genéricos; nomes contra o HWiNFO 🕓 | ⚠️ nomes | D1 |
+| Fan #1–4 | 2273 / 0 / 1201 / 1709 RPM | `B360M_H`: #1 CPU Fan, #2 System Fan; demais sem nome | CPU Fan / System Fan nomeados; #3 e #4 genéricos; HWiNFO 🕓 | ⚠️ nomes | D1 |
+| Controle "Fan #1–5" | **—** nas 12 amostras | linha sem valor nenhum | fora da lista; 0 linhas "—" | ❌ → corrigido | D9 |
 
-Os três valores escalados ficam dentro da tolerância ATX (±5 %), o que confirma que os divisores da `B360M_H` valem para esta placa; os nomes das temperaturas e ventoinhas precisam do HWiNFO.
+Os três valores escalados ficam dentro da tolerância ATX (±5 %): os divisores da `B360M_H` são plausíveis para esta placa, mas sem a referência de 2 % do HWiNFO todas as tensões saem marcadas "estimado (escala da B360M H)", com a origem na dica. Os nomes das temperaturas e das ventoinhas também esperam o HWiNFO.
 
 ### 4.4 GPU (mesma janela que o `nvidia-smi`)
 
@@ -113,7 +114,7 @@ Os três valores escalados ficam dentro da tolerância ATX (±5 %), o que confir
 | Ventoinhas | 0 RPM / 0 % | 0 % | ✅ |
 | Memória usada | 2141–2258 MB | 1959–2059 MiB | ✅ (o LHM conta a reserva do driver, ~200 MB) |
 | Link PCIe | "PCIe 2.0 x16 em repouso" (3.0 x16 máx.) | gen 1–2 em P8/P5 | ✅ |
-| Hot spot, tensão do núcleo | 65,6–67 °C, 0,675 V | não exposto pelo `nvidia-smi`; ⏳ HWiNFO | ⏳ |
+| Hot spot, tensão do núcleo | 65,6–67 °C, 0,675 V | não exposto pelo `nvidia-smi`; HWiNFO | 🕓 |
 
 ### 4.5 Discos
 
@@ -135,7 +136,7 @@ Os três valores escalados ficam dentro da tolerância ATX (±5 %), o que confir
 | RAM | **incompleto e enganoso**: diz que não há timings quando o LHM tem o SPD (D2) e chama o 2666 do SMBIOS de "nominal do módulo" (D3) |
 | Sistema | um **falso negativo** relevante: "Virtualização habilitada = False" com hypervisor ativo (D6) |
 | Placa-mãe | **não confiável**: tensões cruas como se fossem tensões reais (+12 V aparece como 2,03 V), canais sem nome, linhas de controle sempre vazias (D1, D9) |
-| CPU | temperaturas e consumo plausíveis, ⏳ confirmação do HWiNFO; dois sensores de consumo fixos em 0 W que não existem nesta CPU (D8) |
+| CPU | temperaturas e consumo plausíveis, confirmação do HWiNFO 🕓; dois sensores de consumo fixos em 0 W que não existem nesta CPU (D8, corrigido) |
 
 As correções estão no [spec 002](specs/002-correcoes-leitura.md).
 

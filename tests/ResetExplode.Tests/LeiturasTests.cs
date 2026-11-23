@@ -38,6 +38,10 @@ public sealed class LeiturasTests
     public void Perfil_Estimado()
     {
         var p = BoardProfiles.Find("Gigabyte B360M AORUS Gaming 3-CF", "ITE IT8686E")!;
+        // Caminho (b) de 23/11/2026: sem a referência do HWiNFO, toda tensão da placa é estimada; nomes de temperatura e
+        // ventoinha não carregam escala e ficam sem a marca.
+        Assert.All(p.Voltages, v => Assert.True(v.Estimated, v.Name));
+        Assert.All(p.Names, n => Assert.False(n.Estimated, n.Name));
         string tip = BoardProfiles.EstimatedTooltip(p);
         Assert.Contains("B360M_H", tip);
         Assert.Contains("2 %", tip);

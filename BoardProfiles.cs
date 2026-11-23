@@ -22,18 +22,19 @@ public static class BoardProfiles
     {
         // Gigabyte B360M AORUS Gaming 3 (-CF), ITE IT8686E. Divisores e nomes da config "B360M_H" do próprio LHM
         // (mesmo chip, mesma família Gigabyte B360): SuperIOHardware.cs:2072-2090 @ 3d331e3. Os três trilhos escalados
-        // batem com o ATX (±5 %) na medição de 23/11/2026 (docs/diagnostico-pc.md §4.3).
+        // batem com o ATX (±5 %) na medição de 23/11/2026 (docs/diagnostico-pc.md §4.3), mas a referência de 2 % (HWiNFO)
+        // não chegou: todas as tensões ficam "estimado" até essa comparação (spec 002, D1, caminho b).
         new BoardProfile("B360M AORUS Gaming 3", "IT8686E", "LHM B360M_H (SuperIOHardware.cs:2072-2090 @ 3d331e3)",
             new[]
             {
-                new VoltageMap(0, "Vcore"),
-                new VoltageMap(1, "+3.3V", 29.4f, 45.3f),
-                new VoltageMap(2, "+12V", 10f, 2f),
-                new VoltageMap(3, "+5V", 15f, 10f),
-                new VoltageMap(5, "VCCSA"),
-                new VoltageMap(6, "DIMM A/B"),
-                new VoltageMap(7, "+3V Standby", 1, 1),
-                new VoltageMap(8, "CMOS Battery", 1, 1),
+                new VoltageMap(0, "Vcore", Estimated: true),
+                new VoltageMap(1, "+3.3V", 29.4f, 45.3f, Estimated: true),
+                new VoltageMap(2, "+12V", 10f, 2f, Estimated: true),
+                new VoltageMap(3, "+5V", 15f, 10f, Estimated: true),
+                new VoltageMap(5, "VCCSA", Estimated: true),
+                new VoltageMap(6, "DIMM A/B", Estimated: true),
+                new VoltageMap(7, "+3V Standby", 1, 1, Estimated: true),
+                new VoltageMap(8, "CMOS Battery", 1, 1, Estimated: true),
             },
             new[]
             {
@@ -59,10 +60,6 @@ public static class BoardProfiles
     /// <summary>A mesma fórmula do LHM (SuperIOHardware.cs:6085), para teste e para conferir medições.</summary>
     public static float Volts(float raw, VoltageMap m) => raw + (raw - m.Vf) * m.Ri / m.Rf;
 
-    /// <summary>
-    /// Aplica o perfil a cada Super I/O de uma placa com perfil. Devolve os identificadores dos sensores ajustados
-    /// (o SensorMonitor mostra esses mesmo quando o LHM os marcou como ocultos por padrão).
-    /// </summary>
     /// <summary>Texto curto e dica mostrados nos canais do perfil ainda não confirmados contra o HWiNFO (spec 002, D1).</summary>
     public const string EstimatedLabel = "estimado (escala da B360M H)";
 
