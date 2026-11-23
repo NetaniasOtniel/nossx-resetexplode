@@ -1,11 +1,8 @@
 name: Publicar
 
-# A cada push na main, gera o ResetExplode.exe e atualiza a release "latest" (sempre a versão mais nova).
-# Ao criar uma tag (ex.: v0.12), gera também uma release fixa dessa versão.
+# Fork nossx-resetexplode: DESATIVADO para push e tag (spec 000, A6). No original, cada push na main apagava e
+# recriava a release "latest" com um .exe novo; neste fork nenhum push publica nada. Só roda à mão (Actions → Run workflow).
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
   workflow_dispatch:
 
 permissions:
