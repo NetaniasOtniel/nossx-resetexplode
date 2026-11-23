@@ -188,6 +188,15 @@ public partial class MainWindow : Window
         }
 
         await Task.WhenAll(LoadInfo(), LoadSensors(), LoadGpu());
+
+        // Spec 002, D2/D3: timings e velocidade nominal da RAM vêm do SPD, que só existe depois que os sensores abrem.
+        if (InfoCategories.ItemsSource is IEnumerable<InfoNode> cats && cats.FirstOrDefault(c => c.Header == "Memória RAM") is { } ram
+            && SystemInfoCollector.ApplySpd(ram, _monitor.Rows.ToList())
+            && InfoCategories.SelectedItem == ram)
+        {
+            InfoDetails.ItemsSource = null;
+            InfoDetails.ItemsSource = ram.Children;
+        }
     }
 
     // ---------------- Sensores da CPU (PawnIO) ----------------

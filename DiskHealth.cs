@@ -257,8 +257,8 @@ public static class DiskHealth
         M("Ciclos liga/desliga", r.StartStop is long ss ? $"{ss:N0}" : null);
         M("Erros de leitura", r.ReadErr is long re ? $"{re:N0}" + (r.ReadErrUncorrected is long ru && ru > 0 ? $" ({ru:N0} não corrigidos)" : "") : null);
         M("Erros de escrita", r.WriteErr is long we ? $"{we:N0}" + (r.WriteErrUncorrected is long wu && wu > 0 ? $" ({wu:N0} não corrigidos)" : "") : null);
-        M("Total gravado", r.WrittenGb is double wg && wg > 0 ? $"{wg:N0} GB" : null);
-        M("Total lido", r.ReadGb is double rg && rg > 0 ? $"{rg:N0} GB" : null);
+        M("Total gravado", r.WrittenGb is double wg && wg > 0 ? FmtGb(wg) : null); // GB decimais (SensorMonitor.Normalize, spec 002 D5)
+        M("Total lido", r.ReadGb is double rg && rg > 0 ? FmtGb(rg) : null);
         M("Falha prevista (S.M.A.R.T.)", r.PredictFail is bool pf ? (pf ? "SIM" : "Não") : null);
         M("Saúde segundo o Windows", r.Health switch { 0 => "Saudável", 1 => "Atenção", 2 => "Não saudável", _ => null });
         M("Firmware", r.Firmware.Length > 0 ? r.Firmware : null);
@@ -274,6 +274,9 @@ public static class DiskHealth
             Metrics = metrics,
         };
     }
+
+    /// <summary>GB decimais → "4.970 GB" ou "105,58 TB" (o TB do datasheet/TBW).</summary>
+    internal static string FmtGb(double gb) => gb >= 1000 ? $"{gb / 1000:N2} TB" : $"{gb:N0} GB";
 
     private static string FmtSize(long b)
     {

@@ -10,6 +10,8 @@ public class SensorRow : INotifyPropertyChanged
     public string Hardware { get; init; } = "";
     public string Category { get; init; } = "";
     public string Name { get; init; } = "";
+    /// <summary>Índice do sensor no hardware (ISensor.Index), usado pelos perfis de placa e pelos testes.</summary>
+    public int Index { get; init; }
     public SensorType Type { get; init; }
     public HardwareType HardwareType { get; init; }
 
@@ -27,9 +29,18 @@ public class SensorRow : INotifyPropertyChanged
     public string Min => Format(_min);
     public string Max => Format(_max);
 
-    public void Update(float? value, float? min, float? max)
+    /// <summary>
+    /// Mínimo e máximo são os do que o APP leu, não os do LHM (spec 002, D7): o LHM guarda o 0 que alguns sensores têm
+    /// antes da primeira leitura real (NVMe antes do S.M.A.R.T.) e os valores crus de antes de um perfil de placa (D1).
+    /// </summary>
+    public void Update(float? value)
     {
-        _value = value; _min = min; _max = max;
+        _value = value;
+        if (value is float v && !float.IsNaN(v))
+        {
+            if (_min == null || v < _min) _min = v;
+            if (_max == null || v > _max) _max = v;
+        }
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Min)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Max)));
@@ -53,6 +64,7 @@ public class SensorRow : INotifyPropertyChanged
             SensorType.SmallData => $"{v:0.#} MB",
             SensorType.Throughput => $"{v / 1048576f:0.##} MB/s",
             SensorType.Energy => $"{v:0.#} mWh",
+            SensorType.Timing => $"{v:0.###} ns", // SPD da RAM (spec 002, D2)
             _ => $"{v:0.##}"
         };
     }

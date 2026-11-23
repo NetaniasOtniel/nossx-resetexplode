@@ -86,7 +86,7 @@ Os testes de unidade ficam em `tests/ResetExplode.Tests/LeiturasTests.cs`. A med
 | D2 | aba RAM mostra 22-22-22-52 @ 3200 e 19-19-19-43 @ 2666 a partir do SPD; ⏳ HWiNFO "Memory Timings" mostra os configurados | relatório JSON; teste `Spd_CiclosJedec` |
 | D3 | nominal "DDR4-3200 (SPD)"; o 2666 aparece só como "informada pela BIOS" | relatório JSON |
 | D4 | Interface "NVMe" nos dois discos | relatório JSON contra `Get-PhysicalDisk` |
-| D5 | Capacidade 1.024,2 GB e 256,1 GB; total gravado 105,6 TB e 4,97 TB, iguais ao `smartctl` (±0,1 %) | relatório JSON contra `smartctl`; teste `Unidades_Disco` |
+| D5 | Capacidade 1,02 TB e 256,06 GB (base 1000, como o `DiskHealth`); total gravado 105,6 TB e 4,97 TB, iguais ao `smartctl` (±0,1 %) | relatório JSON contra `smartctl`; teste `Unidades_Disco` |
 | D6 | "Sim (hypervisor do Windows ativo)" | relatório JSON contra `HypervisorPresent` |
 | D7 | nenhum mínimo 0 em temperatura, vida, dados e horas dos NVMe | CSV da coleta; teste `SensorRow_MinMaxProprio` |
 | D8 | "CPU Memory" e "CPU Platform" fora da lista; Package e Cores presentes | CSV da coleta; ⏳ HWiNFO |

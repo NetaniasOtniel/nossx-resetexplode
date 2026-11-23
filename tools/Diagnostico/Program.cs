@@ -62,6 +62,9 @@ for (int i = 1; i <= samples; i++)
 }
 
 var rows = monitor.Rows.ToList();
+// Igual à MainWindow (spec 002, D2/D3): o SPD só existe depois que os sensores abrem.
+if (system.FirstOrDefault(c => c.Header == "Memória RAM") is { } ramNode)
+    Log("ApplySpd: " + (SystemInfoCollector.ApplySpd(ramNode, rows) ? "aplicado" : "sem nó de timings"));
 var data = new ReportData
 {
     Date = DateTime.Now,

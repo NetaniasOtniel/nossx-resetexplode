@@ -28,7 +28,15 @@ public sealed class SensorMonitor : IDisposable
     }
 
     /// <summary>Detecta o hardware (leva de 0,5 a alguns segundos) fora da thread da janela. Até terminar, Refresh não faz nada.</summary>
-    public Task OpenAsync() => Task.Run(() => { _computer.Open(); _open = true; });
+    public Task OpenAsync() => Task.Run(() =>
+    {
+        _computer.Open();
+        try { _profiled = BoardProfiles.Apply(_computer); } catch { _profiled = new(); } // perfil é melhoria: nunca derruba os sensores
+        _open = true;
+    });
+
+    /// <summary>Sensores ajustados por um perfil de placa (spec 002, D1).</summary>
+    private HashSet<string> _profiled = new();
 
     public void Refresh()
     {
@@ -43,24 +51,75 @@ public sealed class SensorMonitor : IDisposable
         foreach (var s in hw.Sensors)
         {
             string id = s.Identifier.ToString();
+            float? value = Normalize(hw, s);
             if (!_index.TryGetValue(id, out var row))
             {
+                if (!ShouldList(hw, s, id, value)) continue;
                 row = new SensorRow
                 {
                     Id = id,
                     Hardware = hw.Name,
                     Category = SensorRow.CategoryName(s.SensorType),
-                    Name = s.Name,
+                    Name = DisplayName(hw, s),
+                    Index = s.Index,
                     Type = s.SensorType,
                     HardwareType = hw.HardwareType
                 };
                 _index[id] = row;
                 Rows.Add(row);
             }
-            row.Update(s.Value, s.Min, s.Max);
+            row.Update(value);
         }
         foreach (var sub in hw.SubHardware)
             Walk(sub);
+    }
+
+    /// <summary>
+    /// Spec 002: a linha só entra quando o sensor tem o que mostrar.
+    /// D1 — canal que o LHM deixou oculto por padrão (tensão crua de placa não reconhecida) só aparece se um perfil o ajustou;
+    /// D9 — sensor sem valor nenhum não vira linha "—";
+    /// D8 — consumo da CPU só entra depois de ler &gt; 0 (o LHM ativa "CPU Memory"/"CPU Platform" mesmo com o contador parado).
+    /// </summary>
+    private bool ShouldList(IHardware hw, ISensor s, string id, float? value)
+        => ShouldList(hw.HardwareType, s.SensorType, s.IsDefaultHidden, _profiled.Contains(id), value);
+
+    internal static bool ShouldList(HardwareType hwType, SensorType type, bool defaultHidden, bool profiled, float? value)
+    {
+        // Só no Super I/O: lá "oculto por padrão" quer dizer "tensão sem escala" (default do chip). Em outros hardwares o app
+        // sempre mostrou os ocultos por padrão do LHM, e isso fica como estava.
+        if (hwType == HardwareType.SuperIO && defaultHidden && !profiled) return false;
+        if (value is null || float.IsNaN(value.Value)) return false;
+        if (hwType == HardwareType.Cpu && type == SensorType.Power && value <= 0) return false;
+        return true;
+    }
+
+    /// <summary>
+    /// Spec 002, D5: disco é decimal no app inteiro. O "Data Read/Written" do LHM vem em GiB (unidades NVMe × 512.000 / 2³⁰),
+    /// enquanto "Total Space"/"Free Space" já vêm em GB decimal; converte os dois primeiros para GB decimal.
+    /// </summary>
+    internal static float? Normalize(IHardware hw, ISensor s) => Normalize(hw.HardwareType, s.SensorType, s.Name, s.Value);
+
+    internal static float? Normalize(HardwareType hwType, SensorType type, string name, float? value)
+    {
+        if (value is float v && hwType == HardwareType.Storage && type == SensorType.Data
+            && (name.StartsWith("Data Read", StringComparison.OrdinalIgnoreCase) || name.StartsWith("Data Written", StringComparison.OrdinalIgnoreCase)))
+            return v * GiBToGB;
+        return value;
+    }
+
+    public const float GiBToGB = 1.073741824f;
+
+    /// <summary>Spec 002, D12: na Intel, "CPU Core" e "CPU Core #n" (tensão) são VIDs do IA32_PERF_STATUS, não tensão medida.</summary>
+    internal static string DisplayName(IHardware hw, ISensor s) => DisplayName(hw.HardwareType, s.SensorType, s.Name, hw.Name);
+
+    internal static string DisplayName(HardwareType hwType, SensorType type, string name, string hwName)
+    {
+        if (hwType == HardwareType.Cpu && type == SensorType.Voltage && hwName.Contains("Intel", StringComparison.OrdinalIgnoreCase))
+        {
+            if (name == "CPU Core") return "VID (pedido pela CPU)";
+            if (name.StartsWith("CPU Core #", StringComparison.Ordinal)) return "VID núcleo #" + name["CPU Core #".Length..];
+        }
+        return name;
     }
 
     /// <summary>Temperatura principal da CPU: Package (Intel) / Tctl-Tdie (AMD), senão a maior entre os núcleos.</summary>
