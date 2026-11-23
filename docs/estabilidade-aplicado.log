@@ -1,0 +1,15 @@
+12:01:40 admin=True
+12:01:40 plano ativo: GUID do Esquema de Energia: 381b4222-f694-41f0-9685-ff5bb260df2e  (Equilibrado)
+12:01:40 E8: ajustes de NVMe e ASPM expostos (-ATTRIB_HIDE)
+12:01:41 E5–E7 aplicados e plano reativado
+12:01:42 D3–D4: DedicatedDumpFile=D:\dedicateddump.sys, DumpFileSize=1024 MB (vale após reiniciar)
+12:01:42 ASPM (E1)                 = 0x00000000/0x00000000
+12:01:42 DISKIDLE (E2)             = 0x00000000/0x00000000
+12:01:42 Primary NVMe Idle Timeout                          = 0x00000000/0x00000000
+12:01:42 Secondary NVMe Idle Timeout                        = 0x00000000/0x00000000
+12:01:42 Primary NVMe Power State Transition Latency Tol.   = 0x00000000/0x00000000
+12:01:42 Secondary NVMe Power State Transition Latency Tol. = 0x00000000/0x00000000
+12:01:42 NVMe NOPPME                                        = 0x00000000/0x00000000
+12:01:42 CrashControl: CrashDumpEnabled=3 MinidumpDir=C:\WINDOWS\Minidump AutoReboot=1 Overwrite=1 DedicatedDumpFile=D:\dedicateddump.sys DumpFileSize=1024
+12:01:43 Pagefile: AutomaticManaged=True · C:\pagefile.sys 29696 MB
+12:01:43 FIM
