@@ -9,15 +9,17 @@ namespace ResetExplode;
 
 /// <summary>
 /// Baixa o SDK oficial da Corsair (github.com/CorsairOfficial/cue-sdk, última release) e extrai SOMENTE o iCUESDK.x64_2019.dll
-/// para %AppData%\ResetExplode. Só roda quando o usuário confirma. A assinatura digital da DLL é verificada pelo Windows:
-/// assinatura inválida ou de outro fabricante apaga o arquivo e cancela; sem assinatura gera só um aviso.
+/// para %ProgramFiles%\ResetExplode (só administrador grava). Só roda quando o usuário confirma. A DLL é extraída já na pasta
+/// trancada e conferida lá (spec 001, G1): sem assinatura, assinatura inválida, revogada ou de outro fabricante apaga o arquivo e
+/// cancela. Não existe mais "seguir só com um aviso".
 /// </summary>
 public static class CorsairSdkInstaller
 {
     private const string Repo = "CorsairOfficial/cue-sdk";
-    private const string DllName = "iCUESDK.x64_2019.dll";
+    private const string DllName = CorsairSdk.DllFile;
 
-    public static string TargetPath => Path.Combine(AppSettings.Folder, DllName);
+    public static string TargetDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "ResetExplode");
+    public static string TargetPath => Path.Combine(TargetDir, DllName);
 
     private static readonly HttpClient Http = CreateClient();
 
@@ -79,60 +81,52 @@ public static class CorsairSdkInstaller
                     }
                 }
 
-                string? extracted = ExtractDll(zipPath, tmpDir);
-                if (extracted == null) continue; // não está neste pacote: tenta o próximo
+                // Extrai direto na pasta só de admin: o que é conferido é o que fica, sem janela para troca no %TEMP%.
+                Directory.CreateDirectory(TargetDir);
+                string staged = TargetPath + ".novo";
+                if (!ExtractDll(zipPath, staged)) continue; // não está neste pacote: tenta o próximo
 
                 progress("Verificando a assinatura digital…");
-                string verdict = Verify(extracted);
-                Directory.CreateDirectory(AppSettings.Folder);
-                File.Copy(extracted, TargetPath, true);
-                return $"SDK {tag} instalado em {TargetPath}. {verdict}";
+                try { Verify(staged); }
+                catch { try { File.Delete(staged); } catch { } throw; }
+                File.Move(staged, TargetPath, true);
+                return $"SDK {tag} instalado em {TargetPath}. Assinatura digital da Corsair válida.";
             }
             throw new InvalidOperationException($"Não achei o {DllName} dentro da última release ({tag}). Baixe o SDK manualmente em github.com/{Repo}/releases.");
         }
         finally { try { Directory.Delete(tmpDir, true); } catch { } }
     }
 
-    private static string? ExtractDll(string zipPath, string tmpDir)
+    private static bool ExtractDll(string zipPath, string outPath)
     {
         using var zip = ZipFile.OpenRead(zipPath);
         var entry = zip.Entries
             .Where(e => string.Equals(e.Name, DllName, StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(e => e.FullName.Contains("x64", StringComparison.OrdinalIgnoreCase) && e.FullName.Contains("redist", StringComparison.OrdinalIgnoreCase))
             .FirstOrDefault();
-        if (entry == null) return null;
-        string outPath = Path.Combine(tmpDir, DllName);
+        if (entry == null) return false;
         entry.ExtractToFile(outPath, true); // só esta DLL é extraída; nenhum outro arquivo do pacote toca o disco
-        return outPath;
+        return true;
     }
 
-    /// <summary>Confere o arquivo; lança exceção se for inválido ou de outro fabricante, e devolve o aviso quando não tem assinatura.</summary>
-    private static string Verify(string path)
+    /// <summary>
+    /// Confere o arquivo já na pasta de destino; lança exceção se ele puder ser trocado sem admin, não tiver assinatura, tiver
+    /// assinatura inválida/revogada ou for de outro fabricante. Público para os testes (spec 001, critério G1-a).
+    /// </summary>
+    public static void Verify(string path)
     {
         var fi = new FileInfo(path);
         if (fi.Length < 100_000) throw new InvalidOperationException("O arquivo extraído é pequeno demais para ser a DLL do SDK.");
         using (var fs = File.OpenRead(path))
             if (fs.ReadByte() != 'M' || fs.ReadByte() != 'Z') throw new InvalidOperationException("O arquivo extraído não é uma DLL do Windows.");
 
-        int trust = WinVerifyTrustFile(path);
-        if (trust == unchecked((int)0x800B0100)) return "Aviso: a DLL não tem assinatura digital (origem: repositório oficial da Corsair no GitHub).";
-        if (trust != 0) throw new InvalidOperationException($"A assinatura digital da DLL é inválida (0x{trust:X8}). O arquivo foi descartado.");
-
-        string signer = "";
-        try
-        {
-#pragma warning disable SYSLIB0057
-            using var cert = X509Certificate.CreateFromSignedFile(path);
-            signer = new X509Certificate2(cert).Subject;
-#pragma warning restore SYSLIB0057
-        }
-        catch { }
-        if (!signer.Contains("Corsair", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException($"A DLL está assinada por outro fabricante ({signer}). O arquivo foi descartado.");
-        return "Assinatura digital da Corsair válida.";
+        string? where = TrustedBinary.CheckAdminOnly(path);
+        if (where != null) throw new InvalidOperationException($"Local inseguro para a DLL: {where}. O arquivo foi descartado.");
+        var sig = TrustedBinary.VerifySignature(path, CorsairSdk.Publishers);
+        if (!sig.Ok) throw new InvalidOperationException($"DLL recusada: {sig.Message}. O arquivo foi descartado.");
     }
 
-    // ---- WinVerifyTrust (verificação de assinatura Authenticode feita pelo próprio Windows) ----
+    // ---- WinVerifyTrust legado: ainda usado por DriverManager.VerifyPublisher (fora do escopo do spec 001, ver spec 000 A1/A2) ----
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct WINTRUST_FILE_INFO
     {

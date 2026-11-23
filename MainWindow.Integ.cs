@@ -74,8 +74,10 @@ public partial class MainWindow
         _lightTimer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
         _lightTimer.Tick += LightTick;
         LightColor_Changed(null, null!);
-        BtnOrgbOpen.Content = FindOpenRgb() != null ? "ABRIR O OPENRGB" : "BAIXAR O OPENRGB";
-        _ = ConnectAllAsync(); // primeira abertura da aba: tenta conectar em tudo
+        UpdateOrgbButton();
+        LightStatus.Text = "Controle Corsair desligado. Clique em ATIVAR CONTROLE CORSAIR para carregar o SDK (só a DLL oficial, assinada pela Corsair, de Program Files).";
+        // Primeira abertura da aba: só OpenRGB e Razer (sockets em localhost). A DLL da Corsair NÃO é carregada aqui (spec 001, G1).
+        _ = ConnectAllAsync(IntegrationPolicy.For(IntegrationTrigger.TabOpened, _corsairActivated));
     }
 
     private static ControlTemplate SwatchTemplate()
@@ -90,14 +92,18 @@ public partial class MainWindow
 
     // ---------------- Conexões ----------------
 
-    private async Task ConnectAllAsync()
+    private async Task ConnectAllAsync(ConnectPlan plan)
     {
         if (_lightBusy) return;
         _lightBusy = true;
         BtnLightConnect.IsEnabled = false;
         try
         {
-            await Task.WhenAll(ConnectCorsairAsync(), ConnectOrgbAsync(), ConnectRazerAsync());
+            var tasks = new List<Task>();
+            if (plan.Corsair) tasks.Add(ConnectCorsairAsync());
+            if (plan.OpenRgb) tasks.Add(ConnectOrgbAsync());
+            if (plan.Razer) tasks.Add(ConnectRazerAsync());
+            await Task.WhenAll(tasks);
             RebuildLightList();
         }
         catch (Exception ex) { Diag("Falha geral: " + ex.Message); }
@@ -133,8 +139,9 @@ public partial class MainWindow
             BtnLightSdk.Visibility = dllProblem != null ? Visibility.Visible : Visibility.Collapsed;
             if (dllProblem != null)
             {
-                LightStatus.Text = "O SDK da Corsair (iCUESDK.x64_2019.dll) ainda não está instalado. Clique em BAIXAR O SDK DA CORSAIR: "
-                                   + "o programa baixa só essa DLL do repositório oficial da Corsair e a instala para você.";
+                LightStatus.Text = dllProblem + " O botão BAIXAR O SDK DA CORSAIR baixa só essa DLL do repositório oficial da Corsair, "
+                                   + "grava em " + CorsairSdkInstaller.TargetDir + " e confere a assinatura antes de aceitar.";
+                Diag("iCUE · " + dllProblem);
                 return;
             }
 
@@ -217,56 +224,83 @@ public partial class MainWindow
     private async void BtnLightConnect_Click(object sender, RoutedEventArgs e)
     {
         if (_lightRunning) StopLighting(true);
-        await ConnectAllAsync();
+        await ConnectAllAsync(IntegrationPolicy.For(IntegrationTrigger.ConnectAllClicked, _corsairActivated));
     }
 
-    private static string? FindOpenRgb()
+    /// <summary>Spec 001, G1: o único lugar que pede a DLL da Corsair é este clique.</summary>
+    private async void BtnCorsairActivate_Click(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            var dirs = new List<string>
-            {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "OpenRGB"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "OpenRGB"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "OpenRGB"),
-            };
-            foreach (var baseDir in new[] { Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Downloads",
-                                            Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory) })
-            {
-                if (!Directory.Exists(baseDir)) continue;
-                foreach (var sub in Directory.GetDirectories(baseDir, "OpenRGB*"))
-                {
-                    dirs.Add(sub);
-                    dirs.AddRange(Directory.GetDirectories(sub));
-                }
-            }
-            foreach (var d in dirs)
-            {
-                string exe = Path.Combine(d, "OpenRGB.exe");
-                if (File.Exists(exe)) return exe;
-            }
-        }
-        catch { }
-        return null;
+        if (_lightBusy) return;
+        _corsairActivated = true;
+        BtnCorsairActivate.Content = "CONTROLE CORSAIR ATIVADO";
+        BtnCorsairActivate.IsEnabled = false;
+        await ConnectAllAsync(IntegrationPolicy.For(IntegrationTrigger.CorsairActivateClicked, _corsairActivated));
+        if (_cue?.DllLoaded != true) { BtnCorsairActivate.IsEnabled = true; BtnCorsairActivate.Content = "TENTAR ATIVAR DE NOVO"; }
     }
+
+    // ---------------- OpenRGB (spec 001, G2) ----------------
+
+    private bool _corsairActivated;
+
+    private void UpdateOrgbButton()
+    {
+        bool has = !string.IsNullOrEmpty(_settings.OpenRgbPath) && File.Exists(_settings.OpenRgbPath);
+        BtnOrgbOpen.Content = has ? "ABRIR O OPENRGB" : "ESCOLHER O OPENRGB.EXE";
+        BtnOrgbPick.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>Seletor de arquivo: confere contra as releases oficiais e copia para a pasta só de admin, se preciso.</summary>
+    private bool PickOpenRgb()
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Escolha o OpenRGB.exe (release oficial do openrgb.org / codeberg.org/OpenRGB)",
+            Filter = "OpenRGB.exe|OpenRGB.exe",
+            CheckFileExists = true,
+        };
+        if (dlg.ShowDialog(this) != true) return false;
+        string chosen = dlg.FileName;
+        string? why = OpenRgbGuard.VerifyFolder(chosen, out var rel);
+        if (why != null || rel == null) { OrgbStatus.Text = "OpenRGB recusado: " + why; Diag("OpenRGB · recusado: " + why); return false; }
+
+        string final = chosen;
+        string dir = Path.GetDirectoryName(chosen)!;
+        if (TrustedBinary.CheckAdminOnlyTree(dir) is string loose)
+        {
+            var ok = MessageBox.Show(this,
+                $"O OpenRGB {rel.Version} escolhido é idêntico à release oficial, mas está numa pasta que qualquer programa sem " +
+                $"administrador consegue alterar ({loose}).\n\nPara abri-lo como administrador com segurança, o RESET EXPLODE vai copiar os " +
+                $"arquivos conferidos para\n{Path.Combine(OpenRgbGuard.InstallRoot, rel.Version)}\ne abrir sempre de lá.\n\nContinuar?",
+                "RESET EXPLODE · OpenRGB", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (ok != MessageBoxResult.Yes) return false;
+            try { final = OpenRgbGuard.ImportToAdminFolder(chosen); }
+            catch (Exception ex) { OrgbStatus.Text = "OpenRGB: não consegui copiar com segurança: " + ex.Message; return false; }
+        }
+        _settings.OpenRgbPath = final;
+        try { _settings.Save(); } catch { }
+        Diag($"OpenRGB · {rel.Version} conferido · {final}");
+        UpdateOrgbButton();
+        return true;
+    }
+
+    private void BtnOrgbPick_Click(object sender, RoutedEventArgs e) => PickOpenRgb();
 
     private async void BtnOrgbOpen_Click(object sender, RoutedEventArgs e)
     {
-        string? exe = FindOpenRgb();
-        if (exe == null)
+        if ((string.IsNullOrEmpty(_settings.OpenRgbPath) || !File.Exists(_settings.OpenRgbPath)) && !PickOpenRgb())
         {
-            try { Process.Start(new ProcessStartInfo("https://openrgb.org/") { UseShellExecute = true }); } catch { }
-            OrgbStatus.Text = "OpenRGB: abri o site openrgb.org no navegador. Baixe, descompacte (pode ser em Downloads ou Documentos), e volte aqui.";
+            if (string.IsNullOrEmpty(_settings.OpenRgbPath))
+                OrgbStatus.Text = "OpenRGB: baixe a versão 1.0 ou 1.1 para Windows 64 bits em openrgb.org, descompacte e escolha o OpenRGB.exe aqui.";
             return;
         }
         try
         {
-            Process.Start(new ProcessStartInfo(exe, "--server --startminimized") { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(exe)! });
+            OpenRgbGuard.Launch(_settings.OpenRgbPath!); // confere ACL e SHA-256 de todos os binários de novo, a cada abertura
             OrgbStatus.Text = "OpenRGB: abrindo o servidor…";
             await Task.Delay(4000);
-            await ConnectAllAsync();
+            await ConnectAllAsync(new ConnectPlan(Corsair: false, OpenRgb: true, Razer: false));
         }
-        catch (Exception ex) { OrgbStatus.Text = "OpenRGB: não consegui abrir: " + ex.Message; }
+        catch (Exception ex) { OrgbStatus.Text = "OpenRGB: " + ex.Message; Diag("OpenRGB · " + ex.Message); }
     }
 
     private async void BtnLightSdk_Click(object sender, RoutedEventArgs e)
@@ -294,7 +328,7 @@ public partial class MainWindow
             BtnLightSdk.IsEnabled = true;
             BtnLightConnect.IsEnabled = true;
         }
-        await ConnectAllAsync();
+        await ConnectAllAsync(IntegrationPolicy.For(IntegrationTrigger.CorsairSdkInstalled, _corsairActivated));
     }
 
     // ---------------- Controle ----------------

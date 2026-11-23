@@ -67,6 +67,9 @@ public sealed class AppSettings
     public Dictionary<string, GameProfile> GameProfiles { get; set; } = new();
     public List<CustomGame> CustomGames { get; set; } = new();
 
+    // RESET INTEGRAÇÃO: OpenRGB.exe escolhido pelo usuário e conferido (spec 001, G2). Reconferido a cada abertura.
+    public string? OpenRgbPath { get; set; }
+
     // Aparência
     public bool LightTheme { get; set; }
 
