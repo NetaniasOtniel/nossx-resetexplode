@@ -1215,7 +1215,15 @@
                                 </GroupStyle>
                             </DataGrid.GroupStyle>
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="SENSOR" Binding="{Binding Name}" Width="*"/>
+                                <!-- Spec 002, D1: canal de perfil não confirmado mostra "estimado (escala da B360M H)" e a origem na dica -->
+                                <DataGridTextColumn Header="SENSOR" Binding="{Binding Label}" Width="*">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                                            <Setter Property="ToolTip" Value="{Binding EstimateNote}"/>
+                                            <Setter Property="ToolTipService.IsEnabled" Value="{Binding IsEstimated}"/>
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
                                 <DataGridTextColumn Header="TIPO" Binding="{Binding Category}" Width="130" ElementStyle="{StaticResource MutedCell}"/>
                                 <DataGridTextColumn Header="VALOR" Binding="{Binding Value}" Width="130" ElementStyle="{StaticResource MonoCell}"/>
                                 <DataGridTextColumn Header="MÍN." Binding="{Binding Min}" Width="120" ElementStyle="{StaticResource MutedMonoCell}"/>

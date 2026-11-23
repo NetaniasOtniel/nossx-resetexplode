@@ -12,6 +12,12 @@ public class SensorRow : INotifyPropertyChanged
     public string Name { get; init; } = "";
     /// <summary>Índice do sensor no hardware (ISensor.Index), usado pelos perfis de placa e pelos testes.</summary>
     public int Index { get; init; }
+
+    /// <summary>Dica de "valor estimado" (perfil de placa não confirmado, spec 002 D1); null quando o valor é medido de fato.</summary>
+    public string? EstimateNote { get; init; }
+    public bool IsEstimated => EstimateNote != null;
+    /// <summary>O que a coluna SENSOR mostra: o nome, com o aviso quando é estimado.</summary>
+    public string Label => IsEstimated ? $"{Name} · {BoardProfiles.EstimatedLabel}" : Name;
     public SensorType Type { get; init; }
     public HardwareType HardwareType { get; init; }
 

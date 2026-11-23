@@ -36,7 +36,7 @@ public sealed class SensorMonitor : IDisposable
     });
 
     /// <summary>Sensores ajustados por um perfil de placa (spec 002, D1).</summary>
-    private HashSet<string> _profiled = new();
+    private Dictionary<string, string?> _profiled = new();
 
     public void Refresh()
     {
@@ -62,6 +62,7 @@ public sealed class SensorMonitor : IDisposable
                     Category = SensorRow.CategoryName(s.SensorType),
                     Name = DisplayName(hw, s),
                     Index = s.Index,
+                    EstimateNote = _profiled.TryGetValue(id, out var note) ? note : null,
                     Type = s.SensorType,
                     HardwareType = hw.HardwareType
                 };
@@ -81,7 +82,7 @@ public sealed class SensorMonitor : IDisposable
     /// D8 — consumo da CPU só entra depois de ler &gt; 0 (o LHM ativa "CPU Memory"/"CPU Platform" mesmo com o contador parado).
     /// </summary>
     private bool ShouldList(IHardware hw, ISensor s, string id, float? value)
-        => ShouldList(hw.HardwareType, s.SensorType, s.IsDefaultHidden, _profiled.Contains(id), value);
+        => ShouldList(hw.HardwareType, s.SensorType, s.IsDefaultHidden, _profiled.ContainsKey(id), value);
 
     internal static bool ShouldList(HardwareType hwType, SensorType type, bool defaultHidden, bool profiled, float? value)
     {

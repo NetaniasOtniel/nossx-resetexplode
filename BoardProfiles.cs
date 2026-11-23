@@ -3,10 +3,10 @@ using LibreHardwareMonitor.Hardware;
 namespace ResetExplode;
 
 /// <summary>Uma entrada de tensão do Super I/O: nome e divisor no formato do LHM (V = v + (v − Vf)·Ri/Rf).</summary>
-public sealed record VoltageMap(int Index, string Name, float Ri = 0, float Rf = 1, float Vf = 0);
+public sealed record VoltageMap(int Index, string Name, float Ri = 0, float Rf = 1, float Vf = 0, bool Estimated = false);
 
 /// <summary>Nome de um canal de temperatura, ventoinha ou controle do Super I/O.</summary>
-public sealed record NameMap(SensorType Type, int Index, string Name);
+public sealed record NameMap(SensorType Type, int Index, string Name, bool Estimated = false);
 
 /// <summary>Perfil de placa que o LHM não reconhece. <paramref name="Board"/> é comparado por "contém" com o nome da placa.</summary>
 public sealed record BoardProfile(string Board, string Chip, string Source, IReadOnlyList<VoltageMap> Voltages, IReadOnlyList<NameMap> Names);
@@ -63,9 +63,21 @@ public static class BoardProfiles
     /// Aplica o perfil a cada Super I/O de uma placa com perfil. Devolve os identificadores dos sensores ajustados
     /// (o SensorMonitor mostra esses mesmo quando o LHM os marcou como ocultos por padrão).
     /// </summary>
-    public static HashSet<string> Apply(IComputer computer)
+    /// <summary>Texto curto e dica mostrados nos canais do perfil ainda não confirmados contra o HWiNFO (spec 002, D1).</summary>
+    public const string EstimatedLabel = "estimado (escala da B360M H)";
+
+    public static string EstimatedTooltip(BoardProfile p) =>
+        $"Esta placa não está na tabela do LibreHardwareMonitor. Nome e divisor deste canal vêm de outra placa com o mesmo chip ({p.Source}). " +
+        "O valor é uma estimativa: não foi confirmado contra o HWiNFO dentro de 2 %.";
+
+    /// <summary>
+    /// Aplica o perfil a cada Super I/O de uma placa com perfil. Devolve os identificadores dos sensores ajustados, com a dica
+    /// de "estimado" quando o canal não foi confirmado (null quando foi). O SensorMonitor mostra esses mesmo quando o LHM
+    /// os marcou como ocultos por padrão.
+    /// </summary>
+    public static Dictionary<string, string?> Apply(IComputer computer)
     {
-        var mapped = new HashSet<string>();
+        var mapped = new Dictionary<string, string?>();
         foreach (var board in computer.Hardware.Where(h => h.HardwareType == HardwareType.Motherboard))
             foreach (var sio in board.SubHardware.Where(h => h.HardwareType == HardwareType.SuperIO))
             {
@@ -83,12 +95,12 @@ public static class BoardProfiles
                             s.Parameters[1].Value = v.Rf;
                             s.Parameters[2].Value = v.Vf;
                         }
-                        mapped.Add(s.Identifier.ToString());
+                        mapped[s.Identifier.ToString()] = v.Estimated ? EstimatedTooltip(p) : null;
                     }
                     else if (p.Names.FirstOrDefault(n => n.Type == s.SensorType && n.Index == s.Index) is { } n)
                     {
                         s.Name = n.Name;
-                        mapped.Add(s.Identifier.ToString());
+                        mapped[s.Identifier.ToString()] = n.Estimated ? EstimatedTooltip(p) : null;
                     }
                 }
             }

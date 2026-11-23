@@ -34,6 +34,20 @@ public sealed class LeiturasTests
         }
     }
 
+    [Fact(DisplayName = "D1 · canal de perfil não confirmado aparece como 'estimado (escala da B360M H)' com a origem na dica")]
+    public void Perfil_Estimado()
+    {
+        var p = BoardProfiles.Find("Gigabyte B360M AORUS Gaming 3-CF", "ITE IT8686E")!;
+        string tip = BoardProfiles.EstimatedTooltip(p);
+        Assert.Contains("B360M_H", tip);
+        Assert.Contains("2 %", tip);
+        var est = new SensorRow { Name = "+12V", Type = SensorType.Voltage, EstimateNote = tip };
+        Assert.Equal("+12V · estimado (escala da B360M H)", est.Label);
+        var med = new SensorRow { Name = "+12V", Type = SensorType.Voltage };
+        Assert.Equal("+12V", med.Label);
+        Assert.False(med.IsEstimated);
+    }
+
     [Fact(DisplayName = "D1/D8/D9 · regras de listagem: tensão crua do Super I/O sem perfil, sensor sem valor e consumo 0 W da CPU ficam fora")]
     public void RegrasDeListagem()
     {

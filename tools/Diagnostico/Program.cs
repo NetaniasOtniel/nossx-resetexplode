@@ -49,7 +49,7 @@ for (int i = 1; i <= samples; i++)
     monitor.Refresh();
     string t = DateTime.Now.ToString("HH:mm:ss", inv);
     foreach (var r in monitor.Rows)
-        lhmCsv.Append($"{i};{t};{Q(r.Hardware)};{r.HardwareType};{Q(r.Category)};{Q(r.Name)};{Q(r.Id)};{Q(r.Value)};{N(r.RawValue)};{Q(r.Min)};{Q(r.Max)}\n");
+        lhmCsv.Append($"{i};{t};{Q(r.Hardware)};{r.HardwareType};{Q(r.Category)};{Q(r.Label)};{Q(r.Id)};{Q(r.Value)};{N(r.RawValue)};{Q(r.Min)};{Q(r.Max)}\n");
     var hw = HwInfoShm.Read(out string? why);
     if (hw == null) { if (i == 1) Log("HWiNFO: " + why); }
     else
@@ -72,7 +72,7 @@ var data = new ReportData
     AppVersion = typeof(SensorMonitor).Assembly.GetName().Version?.ToString(3) ?? "",
     System = system.Select(ReportBuilder.ToNode).Where(n => n != null).Cast<ReportNode>().ToList(),
     Gpus = gpus.Select(g => new ReportGpu(g.Name, g.Subtitle, g.Sections.Select(ReportBuilder.ToNode).Where(n => n != null).Cast<ReportNode>().ToList())).ToList(),
-    Sensors = rows.Select(s => new ReportSensor(s.Hardware, s.Category, s.Name, s.Value, s.Min, s.Max)).ToList(),
+    Sensors = rows.Select(s => new ReportSensor(s.Hardware, s.Category, s.Label, s.Value, s.Min, s.Max)).ToList(),
 };
 try { data.Disks.AddRange(DiskHealth.Read(rows).Select(d => new ReportDisk(d.Title, d.Meta, d.VerdictText, d.Reasons, d.Metrics))); }
 catch (Exception ex) { Log("DiskHealth falhou: " + ex); }
