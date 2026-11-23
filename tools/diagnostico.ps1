@@ -26,21 +26,40 @@ $hwDir = 'C:\Program Files\HWiNFO64'
 $hwExe = Join-Path $hwDir 'HWiNFO64.EXE'
 if (-not (Test-Path $hwExe)) { Log "PARADO: $hwExe não existe"; exit 2 }
 $ini = Join-Path $hwDir 'HWiNFO64.INI'
-$lst = [System.Collections.Generic.List[string]]::new()
-if (Test-Path $ini) { foreach ($l in (Get-Content $ini)) { $lst.Add($l) } }
-$si = $lst.FindIndex([Predicate[string]] { param($l) $l -match '^\[Settings\]' })
-if ($si -lt 0) { $lst.Insert(0, '[Settings]'); $si = 0 }
-foreach ($kv in @('SensorsOnly=1', 'SensorsSM=1')) {
-    $k = $kv.Split('=')[0]
-    $ix = $lst.FindIndex([Predicate[string]] { param($l) $l -match "^$k=" })
-    if ($ix -ge 0) { $lst[$ix] = $kv } else { $lst.Insert($si + 1, $kv) }
+function Test-HwShm {
+    try { $m = [System.IO.MemoryMappedFiles.MemoryMappedFile]::OpenExisting('Global\HWiNFO_SENS_SM2', [System.IO.MemoryMappedFiles.MemoryMappedFileRights]::Read); $m.Dispose(); $true } catch { $false }
 }
-Set-Content -Path $ini -Value $lst -Encoding ASCII
-Log "HWiNFO64.INI: $((Get-Content $ini) -join ' | ')"
-
+$iniOriginal = $null
 $hw = Get-Process -Name HWiNFO64 -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($hw) { Log "HWiNFO64 já aberto (PID $($hw.Id)): reaproveitado" }
-else { $hw = Start-Process -FilePath $hwExe -WorkingDirectory $hwDir -PassThru; Log "HWiNFO64 aberto (PID $($hw.Id)); aquecendo $AquecimentoHwinfo s" ; Start-Sleep -Seconds $AquecimentoHwinfo }
+if ($hw) {
+    # Já aberto (pelo dono ou pelo instalador): não fecha e não mexe no INI (só vale na próxima abertura).
+    Log "HWiNFO64 já aberto (PID $($hw.Id)): reaproveitado; INI intocado"
+} else {
+    # Aberto por este script: liga só sensores + memória compartilhada no INI e DEVOLVE o INI original no fim.
+    $iniOriginal = if (Test-Path $ini) { [IO.File]::ReadAllBytes($ini) } else { [byte[]]@() }
+    $lst = [System.Collections.Generic.List[string]]::new()
+    if (Test-Path $ini) { foreach ($l in (Get-Content $ini)) { $lst.Add($l) } }
+    $si = $lst.FindIndex([Predicate[string]] { param($l) $l -match '^\[Settings\]' })
+    if ($si -lt 0) { $lst.Insert(0, '[Settings]'); $si = 0 }
+    foreach ($kv in @('SensorsOnly=1', 'SensorsSM=1')) {
+        $k = $kv.Split('=')[0]
+        $ix = $lst.FindIndex([Predicate[string]] { param($l) $l -match "^$k=" })
+        if ($ix -ge 0) { $lst[$ix] = $kv } else { $lst.Insert($si + 1, $kv) }
+    }
+    Set-Content -Path $ini -Value $lst -Encoding ASCII
+    Log "HWiNFO64.INI (temporário): $((Get-Content $ini) -join ' | ')"
+    $hw = Start-Process -FilePath $hwExe -WorkingDirectory $hwDir -PassThru
+    Log "HWiNFO64 aberto (PID $($hw.Id))"
+}
+# Espera a memória compartilhada (no HWiNFO já aberto, o dono liga em Sensores > Configurações > "Shared Memory Support").
+$limite = (Get-Date).AddMinutes(10)
+while (-not (Test-HwShm) -and (Get-Date) -lt $limite) { Start-Sleep -Seconds 5 }
+if (Test-HwShm) { Log "memória compartilhada do HWiNFO disponível; aquecendo $AquecimentoHwinfo s"; Start-Sleep -Seconds $AquecimentoHwinfo }
+else { Log 'AVISO: memória compartilhada do HWiNFO não apareceu em 10 min; coleta segue só com o ResetExplode' }
+if ($null -ne $iniOriginal) {
+    if ($iniOriginal.Length -gt 0) { [IO.File]::WriteAllBytes($ini, $iniOriginal) } else { Remove-Item $ini -ErrorAction SilentlyContinue }
+    Log 'HWiNFO64.INI devolvido ao original (o HWiNFO já leu a configuração na abertura)'
+}
 
 # Coleta lado a lado: as mesmas classes da tela do ResetExplode + memória compartilhada do HWiNFO.
 $diag = Join-Path $repo 'tools\Diagnostico\bin\Release\net8.0-windows\Diagnostico.exe'
