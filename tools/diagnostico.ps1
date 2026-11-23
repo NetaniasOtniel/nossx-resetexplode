@@ -4,7 +4,8 @@ param(
     [Parameter(Mandatory = $true)][string]$Saida,
     [int]$Amostras = 12,
     [int]$Intervalo = 5,
-    [int]$AquecimentoHwinfo = 45
+    [int]$AquecimentoHwinfo = 45,
+    [int]$EsperaHwinfoMin = 10
 )
 $ErrorActionPreference = 'Continue'
 $repo = Split-Path -Parent $PSScriptRoot
@@ -18,6 +19,7 @@ if (-not $admin) { Log 'PARADO: precisa de administrador'; exit 1 }
 
 # Regra do TPM desta máquina: só o log do vigia e Get-Tpm. Conta os eventos antes e depois para provar que a coleta não armou Clear.
 $vigia = 'C:\ProgramData\VigiaTPM\eventos.jsonl'
+Log "aguardando a memória compartilhada do HWiNFO por até $EsperaHwinfoMin min (Sensores > Configurações > Shared Memory Support)"
 $tpmAntes = if (Test-Path $vigia) { (Get-Content $vigia | Measure-Object -Line).Lines } else { -1 }
 Log "VigiaTPM eventos antes: $tpmAntes"
 
@@ -52,10 +54,10 @@ if ($hw) {
     Log "HWiNFO64 aberto (PID $($hw.Id))"
 }
 # Espera a memória compartilhada (no HWiNFO já aberto, o dono liga em Sensores > Configurações > "Shared Memory Support").
-$limite = (Get-Date).AddMinutes(10)
+$limite = (Get-Date).AddMinutes($EsperaHwinfoMin)
 while (-not (Test-HwShm) -and (Get-Date) -lt $limite) { Start-Sleep -Seconds 5 }
 if (Test-HwShm) { Log "memória compartilhada do HWiNFO disponível; aquecendo $AquecimentoHwinfo s"; Start-Sleep -Seconds $AquecimentoHwinfo }
-else { Log 'AVISO: memória compartilhada do HWiNFO não apareceu em 10 min; coleta segue só com o ResetExplode' }
+else { Log "AVISO: memória compartilhada do HWiNFO não apareceu em $EsperaHwinfoMin min; coleta segue só com o ResetExplode" }
 if ($null -ne $iniOriginal) {
     if ($iniOriginal.Length -gt 0) { [IO.File]::WriteAllBytes($ini, $iniOriginal) } else { Remove-Item $ini -ErrorAction SilentlyContinue }
     Log 'HWiNFO64.INI devolvido ao original (o HWiNFO já leu a configuração na abertura)'
