@@ -138,3 +138,107 @@ Os três valores escalados ficam dentro da tolerância ATX (±5 %), o que confir
 | CPU | temperaturas e consumo plausíveis, ⏳ confirmação do HWiNFO; dois sensores de consumo fixos em 0 W que não existem nesta CPU (D8) |
 
 As correções estão no [spec 002](specs/002-correcoes-leitura.md).
+
+## 6. Memória e estabilidade
+
+Medido em 23/11/2026 depois de fechar os servidores de compilação desta sessão (`dotnet build-server shutdown` às 10:22:45). Foram 7 fotos, uma a cada 5 min, de 10:24 a 10:54, só com leitura (`Get-Process`, CIM, contadores). Nenhum programa foi fechado nem desinstalado. Nas fotos não havia nenhum processo de build, de teste ou do `Diagnostico`.
+
+### 6.1 Uso real
+
+| Hora | RAM em uso | Commit / limite | Pagefile em uso (pico) | Processos |
+|---|---|---|---|---|
+| 08:44 (coleta da etapa 5) | 31,6 de 31,9 GB (**96–99 %**) | 43,1 / 60,9 GB | — | — |
+| **10:29 (oficial, 2 min depois do shutdown)** | **17,0 GB (53 %)** | **32,2 / 60,9 GB** | 9,4 GB (pico 22,6 GB) | 483 |
+| 10:54 | 21,2 GB (66 %) | 38,1 / 60,9 GB | 9,4 GB | 546 |
+
+- O pagefile fica em `C:\pagefile.sys`, gerenciado pelo sistema, com 29,7 GB alocados. O pico de **22,6 GB** em uso mostra que, em algum momento, o PC precisou de cerca de 50 GB de commit para 32 GB de RAM.
+- **De 08:44 para 10:29 o commit caiu 11 GB.** Os processos desta sessão (build, testes, `Diagnostico`, ResetExplode, HWiNFO) explicam no máximo 1 a 2 GB disso: o ResetExplode e o HWiNFO continuam abertos, com 0,18 e 0,08 GB privados. O resto foi liberado por programas do próprio uso do PC entre as duas medições, e não é possível atribuir depois do fato.
+- **De 10:29 para 10:54 o commit subiu 5,9 GB, e não houve vazamento.** Foram 77 processos novos, com 5,4 GB privados:
+  - uma nova sessão do Claude Code às 10:43: 2 processos `claude` com 1,1 GB e **30 `node`** com 2,7 GB (os servidores MCP que cada sessão abre);
+  - 11 processos do Chrome (1,1 GB);
+  - Fotos e Ferramenta de Captura.
+
+### 6.2 Culpados (foto das 10:29)
+
+| Programa | Processos | Privado (commit) | Working set |
+|---|---|---|---|
+| Chrome | 29 | 4,63 GB | 4,26 GB |
+| Claude (sessões abertas desde 22/11) | 17 | 3,80 GB | 2,01 GB |
+| VS Code | 20 | 2,76 GB | 1,38 GB |
+| WebView2 (apps que usam o Edge por dentro) | 40 | 1,94 GB | 1,23 GB |
+| ChatGPT | 16 | 1,82 GB | 1,16 GB |
+| `node` (servidores MCP das sessões do Claude) | 19 | 1,50 GB | 0,10 GB |
+| Kaspersky (`avp`) | 2 | 0,72 GB | 0,34 GB |
+| Superwhisper | 2 | 0,64 GB | 0,06 GB |
+| EA app (`EACefSubProcess` + `EADesktop`) | 6 | 1,04 GB | 0,48 GB |
+| `uv`/`python` (servidores MCP em Python) | 12 | 0,97 GB | 0,00 GB |
+
+Os 15 processos com maior commit às 10:29:
+
+| Processo (PID) | Commit |
+|---|---|
+| chrome (20100) | 0,89 GB |
+| chrome (34092) | 0,85 GB |
+| chrome (22316) | 0,80 GB |
+| claude (27588) | 0,74 GB |
+| avp (4636) | 0,70 GB |
+| claude (23312) | 0,67 GB |
+| Superwhisper (28540) | 0,64 GB |
+| claude (6836) | 0,60 GB |
+| ChatGPT (36072) | 0,58 GB |
+| claude (34704) | 0,55 GB |
+| claude (22500) | 0,53 GB |
+| chrome (12952) | 0,51 GB |
+| Code (3320) | 0,51 GB |
+| explorer (11064) | 0,48 GB |
+| chrome (47172) | 0,46 GB |
+
+Os 15 com maior working set foram 4 processos do Chrome (de 0,50 a 0,97 GB), claude (27588, 0,69 GB), ResetExplode (0,62 GB), ChatGPT, Code, WebView2, EA, `avp`, explorer, WhatsApp e mais um `claude`. Nenhum passa de 1 GB.
+
+**Vazamento: não há.** Em 30 minutos, o maior crescimento de um mesmo processo foi de **+104 MB** (claude 27588), seguido de +98 MB (chrome 20100) e +66 MB (ChatGPT). Nenhum cresceu de forma contínua acima de 100 MB, e o portão de 4 GB não foi acionado. O alto uso vem da **soma de muitos programas que ficam abertos**:
+- várias sessões do Claude Code abertas desde 22/11, cada uma com seus servidores MCP;
+- Chrome, VS Code, ChatGPT e EA app.
+
+### 6.3 Eventos dos últimos 90 dias (24/08 a 23/11/2026)
+
+| Data | Evento | Código / parâmetros | Dispositivo |
+|---|---|---|---|
+| 16/09 17:41 | disk 51 (×8): "erro durante uma operação de paginação" | — | `Harddisk3` = **pendrive SanDisk Cruzer Blade (USB)**, conectado e desconectado 5 vezes em 3 s (Partition/Diagnostic 1006) |
+| 27/09 14:49 | Tela azul + falha ao gravar o despejo (volmgr 161) | **0x154** UNEXPECTED_STORE_EXCEPTION | — |
+| 03/10 13:12 | Tela azul + falha ao gravar o despejo | **0x7A** KERNEL_DATA_INPAGE_ERROR | — |
+| 18/10 21:04 | Tela azul + falha ao gravar o despejo | **0x7A** KERNEL_DATA_INPAGE_ERROR | — |
+| 18/10 21:17 | Tela azul + falha ao gravar o despejo | **0x3B**, p1 = `0xC0000006` (STATUS_IN_PAGE_ERROR) | — |
+| set–out | Kernel-Power 41 (desligamento sem aviso) | 7 em setembro, 4 em outubro | — |
+| 22–23/11 | WER "LiveKernelEvent 193" (×10) | o Windows reenviando sempre o mesmo relatório de 31/10 (`WATCHDOG-20261031-2203.dmp`, travamento do driver de vídeo) | GPU |
+
+- **WHEA-Logger: nenhum evento em 90 dias** (nem de memória, nem de disco, nem de CPU). O portão (a) não foi acionado. Como a RAM não tem ECC, erro de memória não apareceria como WHEA de qualquer forma.
+- **Resource-Exhaustion-Detector: nenhum evento.** O Windows não chegou a ficar sem memória virtual.
+- **Erros de NTFS e `stornvme`: nenhum.** Os únicos `disk` são os do pendrive.
+- **Nenhum minidump existe** (`C:\Windows\Minidump` vazio, sem `MEMORY.DMP`), embora o Windows esteja configurado para gravar minidump (`CrashDumpEnabled = 3`). Nas 4 telas azuis o volmgr 161 diz que **a gravação do despejo falhou**.
+
+### 6.4 Relação com as telas azuis
+
+As quatro telas azuis têm a mesma assinatura: **falha ao trazer de volta uma página que estava no disco**.
+- O 0x7A é o erro de leitura da página.
+- No 0x3B, o código é `0xC0000006`, que é o mesmo erro.
+- O 0x154 é falha no repositório de memória comprimida, que também depende de leitura em disco.
+
+Nas quatro, o Windows **também não conseguiu gravar o despejo**, que vai para o mesmo disco. O `C:` e o `pagefile.sys` ficam no **NVME SSD 1TB** (disco 0, firmware 2008XKR).
+
+Isso aponta para o **caminho até o disco do sistema sumindo por instantes** (controlador NVMe, economia de energia do link, encaixe ou alimentação do M.2), e não para um defeito de RAM:
+- uma falha de RAM costuma dar bugchecks variados (0x1A, 0x50, 0x0A), e não quatro da mesma família de leitura de página. Ressalva: esta RAM não tem ECC, e sem ECC falha de memória **não gera WHEA**, então a ausência de WHEA não descarta a RAM sozinha;
+- o S.M.A.R.T. desse NVMe está limpo (0 erros de mídia, 0 entradas no log de erros, 100 % de reserva), então não há sinal de setor ruim;
+- os **348 desligamentos inseguros** registrados pelo próprio NVMe combinam com quedas de energia ou travamentos totais.
+
+**A RAM cheia não causa as telas azuis, mas aumenta a exposição.** Com 96–99 % de uso e até 22,6 GB no pagefile, o Windows lê páginas do disco o tempo todo. Se o NVMe some por um instante, a próxima leitura de página falha e vira 0x7A. Com a RAM folgada, o mesmo soluço do disco poderia passar sem tela azul.
+
+Sem minidump não dá para fechar a causa. As ações abaixo servem para coletar a prova na próxima ocorrência e reduzir a exposição até lá.
+
+### 6.5 Ações recomendadas (nada foi executado)
+
+1. **Reduzir o commit, sem desinstalar nada.** Fechar as sessões do Claude Code que não estão em uso: cada uma mantém cerca de 15 servidores MCP (`node`, `uv`, `python`), e havia 17 processos `claude` vindos de 22/11. Fechar também o ChatGPT e o EA app quando não estiverem em uso. Só isso devolve de 5 a 8 GB.
+2. **Desligar a economia de energia do link PCIe para testar** (Opções de energia → PCI Express → Gerenciamento de energia do estado do link: Desativado). O próprio NVMe não tem estados de energia profundos (o `smartctl` mostra um único estado de 9 W e nenhum APST), então o que sobra para testar é o link (ASPM). Fica a critério do dono, porque muda configuração.
+3. **Na próxima parada, abrir o gabinete:** reencaixar o NVMe de 1 TB e conferir o parafuso e o dissipador do M.2. Os 348 desligamentos inseguros pedem também conferir a fonte e o estabilizador ou nobreak.
+4. **Garantir que o próximo despejo seja gravado:** manter o pagefile no `C:`, sistema gerenciado como está, e acompanhar se aparecem arquivos em `C:\Windows\Minidump`. Se a próxima tela azul vier de novo sem despejo, o problema está no caminho até o disco.
+5. **Firmware do NVMe:** o "NVME SSD 1TB" é um modelo genérico com controlador **Silicon Motion** (PCI vendor 0x126F, NVMe 1.3, firmware 2008XKR). Sem a marca de quem montou o SSD, não há atualização de firmware confiável para aplicar. Se as telas azuis voltarem, trocar esse NVMe por um de marca é a ação definitiva, porque ele carrega o sistema e o pagefile.
+6. **Teste de RAM** (Diagnóstico de Memória do Windows ou MemTest86, uma noite): não há indício contra a RAM, mas há 4 módulos de dois fabricantes misturados. O teste descarta essa hipótese. Fica para quando o PC puder ficar parado.
