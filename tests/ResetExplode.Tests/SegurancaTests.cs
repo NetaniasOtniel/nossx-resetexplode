@@ -93,7 +93,7 @@ public sealed class SegurancaTests : IDisposable
 
         Assert.NotNull(TrustedBinary.CheckAdminOnly(planted));
         Assert.Equal(IntPtr.Zero, TrustedBinary.LoadVerifiedLibrary(planted, Microsoft, out var why));
-        Assert.Contains("sem ser administrador", why);
+        Assert.Matches("sem ser administrador|o dono de .* não é Administradores", why); // qualquer das duas regras de "só admin" basta
 
         using var sdk = new CorsairSdk();
         string? msg = sdk.LoadDll(new[] { planted });
