@@ -15,7 +15,7 @@
     <Optimize>true</Optimize>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- O projeto de testes mora em tests\ dentro desta pasta: fica fora do glob do app -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);tests\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests\**;tools\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Coleta do diagnóstico cruzado (etapa 5): usa as MESMAS classes que a tela do ResetExplode usa e lê o HWiNFO
+       pela memória compartilhada (Global\HWiNFO_SENS_SM2), na mesma janela de tempo. Só lê: não escreve em hardware. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ResetExplode.csproj" />
+  </ItemGroup>
+
+</Project>
